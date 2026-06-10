@@ -76,12 +76,8 @@ export function Semicircle({
 
         {targetAngle != null &&
           PALETTE_ZONES.map((zone) => {
-            const labelPos = pointOnArc(
-              CX,
-              CY,
-              ZONE_LABEL_RADIUS,
-              targetAngle + (zone.from + zone.to) / 2
-            )
+            const labelAngle = targetAngle + (zone.from + zone.to) / 2
+            const labelPos = pointOnArc(CX, CY, ZONE_LABEL_RADIUS, labelAngle)
             return (
               <g key={zone.from}>
                 <path
@@ -94,6 +90,7 @@ export function Semicircle({
                   className="semicircle__zone-label"
                   textAnchor="middle"
                   dominantBaseline="central"
+                  transform={`rotate(${90 - labelAngle} ${labelPos.x} ${labelPos.y})`}
                 >
                   {zone.points}
                 </text>
