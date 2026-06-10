@@ -66,10 +66,6 @@ export function ClueWriting({ roomCode, room, playerId }) {
       </header>
 
       <div className="card">
-        <p className="text-muted">
-          Voici la position de l&apos;aiguille pour ce spectre. Écris un indice qui aidera tes
-          partenaires à la retrouver !
-        </p>
         <Semicircle spectrum={spectrum} mode="display" angle={round.needleAngle} />
       </div>
 
@@ -80,7 +76,7 @@ export function ClueWriting({ roomCode, room, playerId }) {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Ex. Un plat italien classique"
-          maxLength={60}
+          maxLength={120}
           autoFocus
         />
       </div>

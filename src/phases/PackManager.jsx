@@ -139,10 +139,6 @@ export function PackManager({ onBack }) {
             maxLength={30}
           />
 
-          <p className="text-muted">
-            Pour chaque spectre, indique les deux extrémités opposées (gauche / droite).
-          </p>
-
           {spectra.map((s, i) => (
             <div className="spectrum-row" key={i}>
               <input

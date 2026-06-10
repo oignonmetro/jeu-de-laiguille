@@ -57,7 +57,7 @@ export function Lobby({ roomCode, room, playerId }) {
       </header>
 
       <div className="card">
-        <p className="text-muted">Code de la salle (à partager)</p>
+        <p className="text-muted">Code de la salle</p>
         <p className="code-display">{roomCode}</p>
       </div>
 
@@ -72,9 +72,6 @@ export function Lobby({ roomCode, room, playerId }) {
             </li>
           ))}
         </ul>
-        {players.length < 2 && (
-          <p className="text-muted">Il faut au moins 2 joueurs pour commencer.</p>
-        )}
       </div>
 
       {isHost ? (
@@ -106,11 +103,6 @@ export function Lobby({ roomCode, room, playerId }) {
               </li>
             ))}
           </ul>
-          {customRefs.length === 0 && (
-            <p className="text-muted">
-              Tu peux aussi créer ou rejoindre un pack personnalisé depuis l&apos;écran d&apos;accueil.
-            </p>
-          )}
         </div>
       ) : (
         <div className="card">

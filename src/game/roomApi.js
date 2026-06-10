@@ -15,9 +15,10 @@ export async function createRoom(playerId, playerName) {
       hostId: playerId,
       status: 'lobby',
       players: {
-        [playerId]: { name: playerName, score: 0 },
+        [playerId]: { name: playerName },
       },
       order: [playerId],
+      score: 0,
     })
     return roomCode
   }
@@ -39,7 +40,7 @@ export async function joinRoom(roomCode, playerId, playerName) {
   }
   const order = [...(room.order || []), playerId]
   await update(roomRef, {
-    [`players/${playerId}`]: { name: playerName, score: 0 },
+    [`players/${playerId}`]: { name: playerName },
     order,
   })
 }
@@ -103,7 +104,7 @@ export async function tryAdvanceToGuessing(roomCode) {
 }
 
 // Valide la réponse du devineur pour le tour courant : calcule le score,
-// l'ajoute aux deux joueurs concernés et passe le tour en phase "reveal"
+// l'ajoute au score commun de l'équipe et passe le tour en phase "reveal"
 // (tout le monde voit la position réelle et les points gagnés).
 export async function submitTurnGuess(roomCode, turnIndex, guessedAngle) {
   const roomRef = ref(db, `rooms/${roomCode}`)
@@ -125,8 +126,7 @@ export async function submitTurnGuess(roomCode, turnIndex, guessedAngle) {
       guessedAngle,
       score,
     }
-    room.players[turn.guesserId].score = (room.players[turn.guesserId].score || 0) + score
-    room.players[turn.sourceId].score = (room.players[turn.sourceId].score || 0) + score
+    room.score = (room.score || 0) + score
     room.liveAngle = guessedAngle
     room.turnPhase = 'reveal'
     return room
@@ -153,9 +153,9 @@ export async function advanceTurn(roomCode, turnIndex) {
   })
 }
 
-// Relance une nouvelle partie dans la même salle (mêmes joueurs, scores remis à zéro).
-export async function playAgain(roomCode, room) {
-  const updates = {
+// Relance une nouvelle partie dans la même salle (mêmes joueurs, score remis à zéro).
+export async function playAgain(roomCode) {
+  await update(ref(db, `rooms/${roomCode}`), {
     status: 'lobby',
     rounds: null,
     results: null,
@@ -163,9 +163,6 @@ export async function playAgain(roomCode, room) {
     currentTurn: null,
     turnPhase: null,
     liveAngle: null,
-  }
-  room.order.forEach((playerId) => {
-    updates[`players/${playerId}/score`] = 0
+    score: 0,
   })
-  await update(ref(db, `rooms/${roomCode}`), updates)
 }

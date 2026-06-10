@@ -91,7 +91,7 @@ function GuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
           <p className="text-muted">
             {sourceName} ➜ {guesserName}
           </p>
-          <p className="clue-text">« {entry.clue} »</p>
+          <p className="clue-text">{entry.clue}</p>
           <Semicircle
             spectrum={spectrum}
             mode="result"
@@ -99,9 +99,6 @@ function GuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
             resultAngle={entry.actualAngle}
             score={entry.score}
           />
-          <p className="text-center">
-            {sourceName} et {guesserName} gagnent {entry.score} points chacun.
-          </p>
         </div>
 
         {isGuesser ? (
@@ -127,11 +124,8 @@ function GuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
 
         <div className="card">
           <p className="text-muted">Indice de {sourceName} :</p>
-          <p className="clue-text">« {round.clue} »</p>
+          <p className="clue-text">{round.clue}</p>
           <Semicircle spectrum={spectrum} mode="drag" angle={angle} onChange={handleDrag} />
-          <p className="text-muted text-center">
-            Fais glisser l&apos;aiguille — les autres voient tes hésitations en direct !
-          </p>
         </div>
 
         <button className="btn" onClick={handleValidate} disabled={busy}>
@@ -153,9 +147,8 @@ function GuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
 
       <div className="card">
         <p className="text-muted">Indice de {sourceName} :</p>
-        <p className="clue-text">« {round.clue} »</p>
+        <p className="clue-text">{round.clue}</p>
         <Semicircle spectrum={spectrum} mode="display" angle={room.liveAngle ?? 90} />
-        <p className="text-muted text-center">{guesserName} place son aiguille en direct...</p>
       </div>
     </div>
   )

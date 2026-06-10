@@ -94,7 +94,7 @@ export function Semicircle({
       </div>
 
       {mode === 'result' && score != null && (
-        <div className="semicircle__score">+{score} points</div>
+        <div className="semicircle__score">+{score} points pour l&apos;équipe</div>
       )}
     </div>
   )

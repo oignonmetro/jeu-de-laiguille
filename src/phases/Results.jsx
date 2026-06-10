@@ -6,14 +6,12 @@ import { playAgain } from '../game/roomApi'
 export function Results({ roomCode, room, playerId }) {
   const [busy, setBusy] = useState(false)
   const isHost = room.hostId === playerId
-
-  const players = room.order.map((id) => ({ id, ...room.players[id] }))
-  const sorted = [...players].sort((a, b) => b.score - a.score)
+  const maxScore = room.turns.length * 100
 
   const handlePlayAgain = async () => {
     setBusy(true)
     try {
-      await playAgain(roomCode, room)
+      await playAgain(roomCode)
     } finally {
       setBusy(false)
     }
@@ -25,19 +23,11 @@ export function Results({ roomCode, room, playerId }) {
         <h1 className="app__title">Résultats</h1>
       </header>
 
-      <div className="card">
-        <h2>Scores</h2>
-        <ul className="score-list">
-          {sorted.map((p, i) => (
-            <li key={p.id} className={i === 0 ? 'score-list__item score-list__item--leader' : 'score-list__item'}>
-              <span>
-                {i === 0 ? '🏆 ' : ''}
-                {p.name}
-              </span>
-              <span>{p.score} pts</span>
-            </li>
-          ))}
-        </ul>
+      <div className="card text-center">
+        <h2>Score de l&apos;équipe</h2>
+        <p className="score-total">
+          {room.score} <span className="text-muted">/ {maxScore}</span>
+        </p>
       </div>
 
       <div className="card legend">
