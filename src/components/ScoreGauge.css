@@ -1,0 +1,35 @@
+.score-gauge {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  display: block;
+}
+
+.score-gauge__label {
+  font-size: 6px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  fill: #1e1b2e;
+  pointer-events: none;
+}
+
+.score-gauge__label--active {
+  font-size: 7px;
+}
+
+.score-gauge__needle {
+  stroke: #e23744;
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.score-gauge__pivot {
+  fill: #e23744;
+}
+
+.score-gauge__bound {
+  font-size: 7px;
+  font-weight: 700;
+  fill: var(--color-text-muted);
+}

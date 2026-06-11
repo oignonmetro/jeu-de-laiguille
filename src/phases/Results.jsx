@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Semicircle } from '../components/Semicircle'
+import { ScoreGauge } from '../components/ScoreGauge'
 import { getGuessSourceId } from '../game/logic'
 import { playAgain } from '../game/roomApi'
 
@@ -28,6 +29,7 @@ export function Results({ roomCode, room, playerId }) {
         <p className="score-total">
           {room.score} <span className="text-muted">/ {maxScore}</span>
         </p>
+        <ScoreGauge score={room.score} maxScore={maxScore} />
       </div>
 
       {room.order.map((guesserId) => {
