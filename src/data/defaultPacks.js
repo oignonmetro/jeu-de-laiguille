@@ -54,6 +54,7 @@ export const DEFAULT_PACKS = [
       { left: 'Adapté aux enfants', right: 'Réservé aux adultes' },
       { left: 'Présent dans une grotte', right: 'Présent dans un vaisseau spatial' },
       { left: 'Fait pour l\'été', right: 'Fait pour l\'hiver' },
+      { left: 'Chaise', right: 'Oie' },
     ],
   },
   {
