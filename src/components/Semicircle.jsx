@@ -101,9 +101,6 @@ export function Semicircle({
         {showNeedle && (
           <line x1={CX} y1={CY} x2={needle.x} y2={needle.y} className="semicircle__needle" />
         )}
-        {mode === 'drag' && (
-          <circle cx={needle.x} cy={needle.y} r="9" className="semicircle__handle" />
-        )}
         <circle cx={CX} cy={CY} r="10" className="semicircle__pivot" />
       </svg>
 

@@ -52,12 +52,6 @@
   pointer-events: none;
 }
 
-.semicircle__handle {
-  fill: var(--color-needle);
-  stroke: var(--color-bg);
-  stroke-width: 2;
-}
-
 .semicircle__pivot {
   fill: var(--color-needle);
 }
