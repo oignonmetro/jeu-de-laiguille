@@ -19,13 +19,13 @@
 }
 
 .score-gauge__needle {
-  stroke: #e23744;
+  stroke: var(--color-needle);
   stroke-width: 6;
   stroke-linecap: round;
 }
 
 .score-gauge__pivot {
-  fill: #e23744;
+  fill: var(--color-needle);
 }
 
 .score-gauge__bound {
