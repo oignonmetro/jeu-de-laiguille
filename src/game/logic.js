@@ -42,6 +42,22 @@ export function computeScore(targetAngle, guessedAngle) {
   return 0
 }
 
+// Fusionne les spectres de plusieurs packs en évitant les doublons exacts
+// (un même spectre peut apparaître dans deux packs).
+export function mergeSpectra(packs) {
+  const seen = new Set()
+  const spectra = []
+  packs.forEach((pack) => {
+    pack.spectra.forEach((s) => {
+      const key = `${s.left}|${s.right}`
+      if (seen.has(key)) return
+      seen.add(key)
+      spectra.push(s)
+    })
+  })
+  return spectra
+}
+
 // Attribue 3 spectres + une position d'aiguille à chaque joueur.
 export function assignRounds(spectra, playerIds) {
   const needed = playerIds.length * ROUNDS_PER_PLAYER

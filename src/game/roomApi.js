@@ -1,7 +1,14 @@
 import { ref, set, update, get, onValue, runTransaction, serverTimestamp } from 'firebase/database'
 import { db } from '../firebase'
 import { generateRoomCode } from './codes'
-import { assignRounds, buildTurns, computeScore, pickDifferentSpectrum, MAX_REROLLS } from './logic'
+import {
+  assignRounds,
+  buildTurns,
+  computeScore,
+  mergeSpectra,
+  pickDifferentSpectrum,
+  MAX_REROLLS,
+} from './logic'
 
 export async function createRoom(playerId, playerName) {
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -50,19 +57,31 @@ export function subscribeRoom(roomCode, callback) {
   return onValue(roomRef, (snapshot) => callback(snapshot.val()))
 }
 
-export async function selectPack(roomCode, pack) {
-  await set(ref(db, `rooms/${roomCode}/pack`), {
+// Ajoute / retire un pack de la sélection de la partie. Plusieurs packs
+// peuvent être sélectionnés : leurs spectres seront fusionnés au démarrage.
+export async function addPack(roomCode, pack) {
+  await set(ref(db, `rooms/${roomCode}/packs/${pack.id}`), {
     name: pack.name,
     spectra: pack.spectra,
   })
 }
 
+export async function removePack(roomCode, packId) {
+  await set(ref(db, `rooms/${roomCode}/packs/${packId}`), null)
+}
+
 export async function startGame(roomCode, room) {
   const order = room.order
-  const rounds = assignRounds(room.pack.spectra, order)
+  const packs = Object.values(room.packs || {})
+  const spectra = mergeSpectra(packs)
+  const rounds = assignRounds(spectra, order)
 
   await update(ref(db, `rooms/${roomCode}`), {
     status: 'clue-writing',
+    pack: {
+      name: packs.map((p) => p.name).join(' + '),
+      spectra,
+    },
     rounds,
     results: null,
   })
