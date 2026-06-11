@@ -58,6 +58,21 @@ export function subscribeRoom(roomCode, callback) {
   return onValue(roomRef, (snapshot) => callback(snapshot.val()))
 }
 
+// Quitte la salle depuis le lobby : retire le joueur, transmet l'hôte au
+// joueur suivant si besoin, supprime la salle si elle se vide. En cours de
+// partie on ne touche pas à la salle (le joueur peut revenir avec le code).
+export async function leaveRoom(roomCode, playerId) {
+  const roomRef = ref(db, `rooms/${roomCode}`)
+  await runTransaction(roomRef, (room) => {
+    if (!room || room.status !== 'lobby' || !room.players?.[playerId]) return room
+    delete room.players[playerId]
+    room.order = (room.order || []).filter((id) => id !== playerId)
+    if (room.order.length === 0) return null
+    if (room.hostId === playerId) room.hostId = room.order[0]
+    return room
+  })
+}
+
 // Ajoute / retire un pack de la sélection de la partie. Plusieurs packs
 // peuvent être sélectionnés : leurs spectres seront fusionnés au démarrage.
 export async function addPack(roomCode, pack) {
@@ -97,17 +112,21 @@ export async function setRoundReady(roomCode, playerId, roundIndex, ready) {
 }
 
 // Change le spectre d'un indice à écrire (au plus MAX_REROLLS fois par
-// indice), ainsi que la position de la palette. Transaction sur la manche
-// pour que le compteur reste fiable même en cas de double clic.
+// indice), ainsi que la position de la palette. Le nouveau spectre évite
+// tous ceux déjà attribués au joueur dans cette partie. Transaction sur
+// les manches du joueur pour que le compteur reste fiable même en cas de
+// double clic.
 export async function rerollSpectrum(roomCode, playerId, roundIndex, spectraCount) {
-  const roundRef = ref(db, `rooms/${roomCode}/rounds/${playerId}/${roundIndex}`)
-  await runTransaction(roundRef, (round) => {
-    if (!round || round.ready) return round
-    if ((round.rerolls || 0) >= MAX_REROLLS) return round
-    round.spectrumIndex = pickDifferentSpectrum(spectraCount, round.spectrumIndex)
+  const roundsRef = ref(db, `rooms/${roomCode}/rounds/${playerId}`)
+  await runTransaction(roundsRef, (rounds) => {
+    const round = rounds?.[roundIndex]
+    if (!round || round.ready) return rounds
+    if ((round.rerolls || 0) >= MAX_REROLLS) return rounds
+    const used = rounds.map((r) => r.spectrumIndex)
+    round.spectrumIndex = pickDifferentSpectrum(spectraCount, round.spectrumIndex, used)
     round.needleAngle = randomAngle()
     round.rerolls = (round.rerolls || 0) + 1
-    return round
+    return rounds
   })
 }
 

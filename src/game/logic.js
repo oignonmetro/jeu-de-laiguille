@@ -58,37 +58,45 @@ export function mergeSpectra(packs) {
   return spectra
 }
 
-// Attribue 3 spectres + une position d'aiguille à chaque joueur.
+// Attribue 3 spectres + une position d'aiguille à chaque joueur, sans
+// jamais donner deux fois le même spectre à un même joueur.
 export function assignRounds(spectra, playerIds) {
-  const needed = playerIds.length * ROUNDS_PER_PLAYER
   const baseIndices = spectra.map((_, i) => i)
-
   let pool = shuffle(baseIndices)
-  while (pool.length < needed) {
-    pool = pool.concat(shuffle(baseIndices))
-  }
-  pool = pool.slice(0, needed)
 
   const assignments = {}
-  playerIds.forEach((playerId, i) => {
-    assignments[playerId] = pool
-      .slice(i * ROUNDS_PER_PLAYER, (i + 1) * ROUNDS_PER_PLAYER)
-      .map((spectrumIndex) => ({
-        spectrumIndex,
-        needleAngle: randomAngle(),
-        clue: '',
-        ready: false,
-        rerolls: 0,
-      }))
+  playerIds.forEach((playerId) => {
+    const mine = []
+    while (mine.length < ROUNDS_PER_PLAYER) {
+      let idx = pool.findIndex((s) => !mine.includes(s))
+      if (idx === -1) {
+        pool = shuffle(baseIndices)
+        idx = pool.findIndex((s) => !mine.includes(s))
+        if (idx === -1) idx = 0 // moins de spectres que de manches : doublon inévitable
+      }
+      mine.push(pool.splice(idx, 1)[0])
+    }
+    assignments[playerId] = mine.map((spectrumIndex) => ({
+      spectrumIndex,
+      needleAngle: randomAngle(),
+      clue: '',
+      ready: false,
+      rerolls: 0,
+    }))
   })
   return assignments
 }
 
-// Tire un nouveau spectre, différent du spectre actuel.
-export function pickDifferentSpectrum(spectraCount, currentIndex) {
-  if (spectraCount < 2) return currentIndex
-  const offset = Math.floor(Math.random() * (spectraCount - 1)) + 1
-  return (currentIndex + offset) % spectraCount
+// Tire un nouveau spectre, différent du spectre actuel et de ceux à exclure
+// (les spectres déjà attribués au joueur dans cette partie).
+export function pickDifferentSpectrum(spectraCount, currentIndex, excluded = []) {
+  const taken = new Set([currentIndex, ...excluded])
+  const candidates = []
+  for (let i = 0; i < spectraCount; i++) {
+    if (!taken.has(i)) candidates.push(i)
+  }
+  if (candidates.length === 0) return currentIndex
+  return candidates[Math.floor(Math.random() * candidates.length)]
 }
 
 // Le joueur `playerId` devine les indices écrits par le joueur précédent dans l'ordre.

@@ -201,16 +201,25 @@ textarea:focus {
   white-space: nowrap;
 }
 
-.room-code-tag {
+.room-footer {
   text-align: center;
   padding-bottom: 0.9rem;
   font-size: 0.8rem;
   color: var(--color-text-muted);
 }
 
-.room-code-tag__code {
+.room-footer__code {
   font-family: ui-monospace, Consolas, monospace;
   letter-spacing: 0.15em;
+}
+
+.room-footer__leave {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: var(--color-text-muted);
+  text-decoration: underline;
 }
 
 .clue-text {
