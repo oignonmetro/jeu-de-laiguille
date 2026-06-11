@@ -121,6 +121,7 @@ export const DEFAULT_PACKS = [
       { left: 'Facile à expliquer bourré', right: 'Nécessite un doctorat' },
       { left: 'Falsifiable', right: 'Infalsifiable' },
       { left: 'A changé le monde', right: 'Est resté dans les livres' },
+      { left: 'Agreg compatible', right: 'Agreg incompatible' },
     ],
   },
 ]
