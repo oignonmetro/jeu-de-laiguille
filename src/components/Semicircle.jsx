@@ -32,7 +32,7 @@ export function Semicircle({
       if (!svg) return
       const rect = svg.getBoundingClientRect()
       const px = ((event.clientX - rect.left) / rect.width) * 200
-      const py = ((event.clientY - rect.top) / rect.height) * 110
+      const py = ((event.clientY - rect.top) / rect.height) * 112
       const newAngle = angleFromPointer(CX, CY, px, py)
       onChange?.(Math.round(newAngle))
     },
@@ -64,7 +64,7 @@ export function Semicircle({
     <div className="semicircle">
       <svg
         ref={svgRef}
-        viewBox="0 0 200 110"
+        viewBox="0 0 200 112"
         className={`semicircle__svg semicircle__svg--${mode}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
