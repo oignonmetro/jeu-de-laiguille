@@ -66,14 +66,28 @@ function App() {
 
   switch (room.status) {
     case 'clue-writing':
-      return <ClueWriting roomCode={roomCode} room={room} playerId={playerId} />
+      return withRoomCode(<ClueWriting roomCode={roomCode} room={room} playerId={playerId} />)
     case 'guessing':
-      return <Guessing roomCode={roomCode} room={room} playerId={playerId} />
+      return withRoomCode(<Guessing roomCode={roomCode} room={room} playerId={playerId} />)
     case 'results':
-      return <Results roomCode={roomCode} room={room} playerId={playerId} />
+      return withRoomCode(<Results roomCode={roomCode} room={room} playerId={playerId} />)
     case 'lobby':
     default:
       return <Lobby roomCode={roomCode} room={room} playerId={playerId} />
+  }
+
+  // Rappel discret du code de la salle pendant la partie, pour qu'un joueur
+  // déconnecté puisse redonner le code aux autres (le lobby l'affiche déjà
+  // en grand).
+  function withRoomCode(screen) {
+    return (
+      <>
+        {screen}
+        <footer className="room-code-tag">
+          Salle <span className="room-code-tag__code">{roomCode}</span>
+        </footer>
+      </>
+    )
   }
 }
 

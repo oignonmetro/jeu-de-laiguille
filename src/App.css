@@ -201,6 +201,18 @@ textarea:focus {
   white-space: nowrap;
 }
 
+.room-code-tag {
+  text-align: center;
+  padding-bottom: 0.9rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.room-code-tag__code {
+  font-family: ui-monospace, Consolas, monospace;
+  letter-spacing: 0.15em;
+}
+
 .clue-text {
   font-size: 1.2rem;
   font-weight: 600;
