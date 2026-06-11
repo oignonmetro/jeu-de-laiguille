@@ -59,10 +59,6 @@
 }
 
 .semicircle__pivot {
-  fill: var(--color-text-muted);
-}
-
-.semicircle__pivot--needle {
   fill: var(--color-needle);
 }
 
