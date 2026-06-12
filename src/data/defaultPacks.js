@@ -137,7 +137,6 @@ export const DEFAULT_PACKS = [
       { left: 'Capitale', right: 'Petit village' },
       { left: 'Pays riche', right: 'Pays pauvre' },
       { left: 'Facile d\'accès', right: 'Isolé' },
-      { left: 'Francophone', right: 'Non-francophone' },
       { left: 'Hémisphère Nord', right: 'Hémisphère Sud' },
       { left: 'Petit pays', right: 'Pays-continent' },
       { left: 'Paris', right: 'Marseille' },
