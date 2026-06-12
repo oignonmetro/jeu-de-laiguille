@@ -15,6 +15,7 @@ export function PackManager({ onBack }) {
   const [searchName, setSearchName] = useState('')
   // null = aucune recherche lancée ; [] = recherche sans résultat.
   const [searchResults, setSearchResults] = useState(null)
+  const [searchError, setSearchError] = useState('')
   const [savedCode, setSavedCode] = useState(null)
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
@@ -125,11 +126,21 @@ export function PackManager({ onBack }) {
   const handleSearch = async () => {
     if (!searchName.trim()) return
     setBusy(true)
-    setError('')
+    setSearchError('')
+    setSearchResults(null)
     try {
       setSearchResults(await findPacksByName(searchName))
     } catch (err) {
-      setError(userMessage(err))
+      // La recherche lit la liste entière des packs : si les règles de la
+      // base ne l'autorisent pas encore, on explique quoi corriger.
+      const denied = String(err?.message || '')
+        .toLowerCase()
+        .includes('permission')
+      setSearchError(
+        denied
+          ? 'La base de données refuse la lecture de la liste des packs. Dans la console Firebase, ajoute ".read": true au niveau de "packs" (voir le README).'
+          : userMessage(err)
+      )
     } finally {
       setBusy(false)
     }
@@ -226,6 +237,7 @@ export function PackManager({ onBack }) {
         <button className="btn btn--secondary" onClick={handleSearch} disabled={busy}>
           Rechercher
         </button>
+        {searchError && <p className="error">{searchError}</p>}
         {searchResults && searchResults.length === 0 && (
           <p className="text-muted">Aucun pack trouvé avec ce nom.</p>
         )}
