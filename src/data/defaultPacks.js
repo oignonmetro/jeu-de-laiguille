@@ -141,7 +141,7 @@ export const DEFAULT_PACKS = [
       { left: 'Hémisphère Nord', right: 'Hémisphère Sud' },
       { left: 'Petit pays', right: 'Pays-continent' },
       { left: 'Paris', right: 'Marseille' },
-      { left: 'France', right: 'Outre-mer' },
+      { left: 'Métropole', right: 'Outre-mer' },
       { left: 'Destination de rêve', right: 'Destination qu\'on évite' },
       { left: 'Rive gauche', right: 'Rive droite' },
       { left: 'Paris intra-muros', right: 'Grande banlieue' },
