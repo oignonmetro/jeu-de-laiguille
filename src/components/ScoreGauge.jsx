@@ -64,7 +64,7 @@ export function ScoreGauge({ score, maxScore }) {
   const step = 180 / ZONES.length
 
   return (
-    <svg viewBox="0 0 200 112" className="score-gauge">
+    <svg viewBox="0 0 200 115" className="score-gauge">
       {ZONES.map((zone, i) => {
         const active = i === activeIndex
         const from = 180 - (i + 1) * step
@@ -99,7 +99,7 @@ export function ScoreGauge({ score, maxScore }) {
         y2={needle.y}
         className="score-gauge__needle"
       />
-      <circle cx={CX} cy={CY} r="11" className="score-gauge__pivot" />
+      <circle cx={CX} cy={CY} r="13" className="score-gauge__pivot" />
 
       <text x="10" y="109" className="score-gauge__bound" textAnchor="start">
         0
