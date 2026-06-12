@@ -274,6 +274,58 @@ textarea:focus {
   animation: score-pulse 0.9s ease;
 }
 
+/* Entrée en fondu + glissement de la carte de chaque manche révélée. */
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card--enter {
+  animation: card-enter 0.35s ease;
+}
+
+.finale {
+  position: relative;
+}
+
+.score-total--finale {
+  font-size: 3.2rem;
+}
+
+/* Verdict qualitatif affiché en grand à la fin du balayage de la jauge. */
+@keyframes verdict-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.finale__verdict {
+  font-size: 2rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  animation: verdict-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card--enter,
+  .finale__verdict,
+  .score-total--pulse {
+    animation: none;
+  }
+}
+
 .result-round {
   border-top: 1px solid var(--color-surface-alt);
   padding-top: 0.75rem;

@@ -1,15 +1,29 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Semicircle } from '../components/Semicircle'
 import { ScoreGauge } from '../components/ScoreGauge'
+import { getGaugeVerdict } from '../components/gaugeZones'
+import { Confetti } from '../components/Confetti'
+import { useCountUp } from '../hooks/useCountUp'
 import { getGuessSourceId } from '../game/logic'
 import { playAgain } from '../game/roomApi'
 
-// Durée d'affichage de chaque manche pendant la cinématique de révélation.
-const TURN_DURATION_MS = 3000
+// Cinématique de révélation : chaque manche passe par un temps de suspense
+// (l'aiguille du joueur seule) puis la révélation (palette + score ajouté).
+const SUSPENSE_MS = 1200
+const REVEAL_MS = 2800
+// Balayage lent de la jauge sur l'écran de score final.
+const FINALE_SWEEP_MS = 2400
+// Part du score max à partir de laquelle on fête le résultat aux confettis
+// (zones « Super » et « Waouh ! » de la jauge).
+const CELEBRATION_RATIO = 2 / 3
 
 export function Results({ roomCode, room, playerId }) {
   const [busy, setBusy] = useState(false)
+  // phase 'turns' : manches révélées une à une ; 'finale' : score total
+  // dramatisé ; 'recap' : récapitulatif détaillé complet.
+  const [phase, setPhase] = useState('turns')
   const [turnIndex, setTurnIndex] = useState(0)
+  const [stage, setStage] = useState('suspense')
   const isHost = room.hostId === playerId
   const maxScore = room.turns.length * 4
 
@@ -23,20 +37,37 @@ export function Results({ roomCode, room, playerId }) {
     return scores
   }, [room.turns, room.results])
 
-  // Avance automatiquement d'une manche à la fois pendant la cinématique.
-  useEffect(() => {
-    if (turnIndex >= room.turns.length) return undefined
-    const timer = setTimeout(() => setTurnIndex((i) => i + 1), TURN_DURATION_MS)
-    return () => clearTimeout(timer)
-  }, [turnIndex, room.turns.length])
+  const revealed = stage === 'reveal'
+  const displayedScore = cumulativeScores[turnIndex + (revealed ? 1 : 0)]
+  const countedScore = useCountUp(displayedScore)
 
-  // Petit retour haptique quand la manche révélée rapporte le score maximum.
+  // Avancement automatique : suspense → révélation → manche suivante,
+  // puis écran de finale après la dernière manche.
   useEffect(() => {
-    if (turnIndex >= room.turns.length) return
+    if (phase !== 'turns') return undefined
+    const timer = setTimeout(
+      () => {
+        if (!revealed) {
+          setStage('reveal')
+        } else if (turnIndex + 1 < room.turns.length) {
+          setTurnIndex(turnIndex + 1)
+          setStage('suspense')
+        } else {
+          setPhase('finale')
+        }
+      },
+      revealed ? REVEAL_MS : SUSPENSE_MS
+    )
+    return () => clearTimeout(timer)
+  }, [phase, turnIndex, revealed, room.turns.length])
+
+  // Petit retour haptique au moment où une manche à 4 points est révélée.
+  useEffect(() => {
+    if (phase !== 'turns' || !revealed) return
     if (cumulativeScores[turnIndex + 1] - cumulativeScores[turnIndex] === 4) {
       navigator.vibrate?.(200)
     }
-  }, [turnIndex, room.turns.length, cumulativeScores])
+  }, [phase, revealed, turnIndex, cumulativeScores])
 
   const handlePlayAgain = async () => {
     setBusy(true)
@@ -47,13 +78,14 @@ export function Results({ roomCode, room, playerId }) {
     }
   }
 
-  if (turnIndex < room.turns.length) {
+  if (phase === 'turns' && room.turns.length > 0) {
     const turn = room.turns[turnIndex]
     const entry = room.results[turn.guesserId][turn.roundIndex]
     const spectrum = room.pack.spectra[entry.spectrumIndex]
     const sourceName = room.players[turn.sourceId].name
     const guesserName = room.players[turn.guesserId].name
     const progress = `Manche ${turnIndex + 1} / ${room.turns.length}`
+    const pulse = revealed && entry.score === 4
 
     return (
       <div className="app">
@@ -64,35 +96,44 @@ export function Results({ roomCode, room, playerId }) {
 
         <div className="card text-center">
           <h2>Score de l&apos;équipe</h2>
-          {/* key={turnIndex} : relance l'animation de pulse à chaque manche */}
+          {/* key : relance l'animation de pulse à chaque révélation */}
           <p
-            key={turnIndex}
-            className={`score-total${entry.score === 4 ? ' score-total--pulse' : ''}`}
+            key={`${turnIndex}-${stage}`}
+            className={`score-total${pulse ? ' score-total--pulse' : ''}`}
           >
-            {cumulativeScores[turnIndex + 1]} <span className="text-muted">/ {maxScore}</span>
+            {countedScore} <span className="text-muted">/ {maxScore}</span>
           </p>
-          <ScoreGauge score={cumulativeScores[turnIndex + 1]} maxScore={maxScore} />
+          <ScoreGauge score={displayedScore} maxScore={maxScore} />
         </div>
 
-        <div className="card">
+        {/* key={turnIndex} : rejoue la transition d'entrée à chaque manche */}
+        <div className="card card--enter" key={turnIndex}>
           <p className="text-muted">
             {sourceName} ➜ {guesserName}
           </p>
           <p className="clue-text">« {entry.clue} »</p>
-          <Semicircle
-            spectrum={spectrum}
-            mode="result"
-            angle={entry.guessedAngle}
-            targetAngle={entry.actualAngle}
-            score={entry.score}
-          />
+          {revealed ? (
+            <Semicircle
+              spectrum={spectrum}
+              mode="result"
+              angle={entry.guessedAngle}
+              targetAngle={entry.actualAngle}
+              score={entry.score}
+            />
+          ) : (
+            <Semicircle spectrum={spectrum} mode="display" angle={entry.guessedAngle} />
+          )}
         </div>
 
-        <button className="btn btn--ghost" onClick={() => setTurnIndex(room.turns.length)}>
+        <button className="btn btn--ghost" onClick={() => setPhase('finale')}>
           Passer
         </button>
       </div>
     )
+  }
+
+  if (phase === 'finale') {
+    return <Finale score={room.score} maxScore={maxScore} onDone={() => setPhase('recap')} />
   }
 
   return (
@@ -143,6 +184,51 @@ export function Results({ roomCode, room, playerId }) {
       ) : (
         <p className="text-muted">En attente que l&apos;hôte relance une partie...</p>
       )}
+    </div>
+  )
+}
+
+// Écran de score final : la jauge re-balaie lentement depuis zéro pendant
+// que le compteur monte, puis le verdict apparaît en grand (avec confettis
+// si l'équipe a brillé).
+function Finale({ score, maxScore, onDone }) {
+  const [showVerdict, setShowVerdict] = useState(false)
+  const countedScore = useCountUp(score, FINALE_SWEEP_MS)
+  const verdict = getGaugeVerdict(score, maxScore)
+  const celebrate = maxScore > 0 && score >= maxScore * CELEBRATION_RATIO
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowVerdict(true), FINALE_SWEEP_MS + 150)
+    return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    if (showVerdict && celebrate) navigator.vibrate?.([100, 60, 100])
+  }, [showVerdict, celebrate])
+
+  return (
+    <div className="app">
+      <header className="app__header">
+        <h1 className="app__title">Score final</h1>
+      </header>
+
+      <div className="card text-center finale">
+        <h2>Score de l&apos;équipe</h2>
+        <p className="score-total score-total--finale">
+          {countedScore} <span className="text-muted">/ {maxScore}</span>
+        </p>
+        <ScoreGauge score={score} maxScore={maxScore} sweepDurationMs={FINALE_SWEEP_MS} />
+        {showVerdict && (
+          <p className="finale__verdict" style={{ color: verdict.color }}>
+            {verdict.label}
+          </p>
+        )}
+        {showVerdict && celebrate && <Confetti />}
+      </div>
+
+      <button className="btn" onClick={onDone}>
+        Voir le détail
+      </button>
     </div>
   )
 }

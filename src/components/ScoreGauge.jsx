@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { pointOnArc } from '../utils/angle'
+import { GAUGE_ZONES as ZONES } from './gaugeZones'
 import './ScoreGauge.css'
 
 const CX = 100
@@ -8,18 +9,6 @@ const R = 86
 const ACTIVE_R = 94
 const NEEDLE_LENGTH = 56
 const LABEL_RADIUS = 70
-const SWEEP_DURATION_MS = 600
-
-// Zones qualitatives de la jauge, de la pire (à gauche) à la meilleure
-// (à droite), comme sur un cadran de score.
-const ZONES = [
-  { label: 'Aïe', color: '#e07856' },
-  { label: 'OK', color: '#d9a542' },
-  { label: 'Pas mal.', color: '#e3a6ab' },
-  { label: 'Bien', color: '#f0c9ce' },
-  { label: 'Super', color: '#cfe3c0' },
-  { label: 'Waouh !', color: '#b5d9a8' },
-]
 
 function zonePath(fromAngle, toAngle, r) {
   const outer = pointOnArc(CX, CY, r, toAngle)
@@ -31,7 +20,7 @@ function zonePath(fromAngle, toAngle, r) {
 // à maxScore points (extrême droite). L'aiguille balaie progressivement
 // vers sa nouvelle position chaque fois que le score change, pour la
 // cinématique de fin de partie.
-export function ScoreGauge({ score, maxScore }) {
+export function ScoreGauge({ score, maxScore, sweepDurationMs = 600 }) {
   const targetRatio = maxScore > 0 ? Math.max(0, Math.min(1, score / maxScore)) : 0
   const targetAngle = 180 - targetRatio * 180
 
@@ -47,7 +36,7 @@ export function ScoreGauge({ score, maxScore }) {
     const startTime = performance.now()
     let frame
     const tick = (now) => {
-      const t = Math.min(1, (now - startTime) / SWEEP_DURATION_MS)
+      const t = Math.min(1, (now - startTime) / sweepDurationMs)
       const eased = 1 - Math.pow(1 - t, 3)
       const next = start + delta * eased
       angleRef.current = next
@@ -56,7 +45,7 @@ export function ScoreGauge({ score, maxScore }) {
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [targetAngle])
+  }, [targetAngle, sweepDurationMs])
 
   const ratio = 1 - angle / 180
   const activeIndex = Math.min(ZONES.length - 1, Math.max(0, Math.floor(ratio * ZONES.length)))
