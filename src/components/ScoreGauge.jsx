@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { pointOnArc } from '../utils/angle'
 import './ScoreGauge.css'
 
@@ -7,6 +8,7 @@ const R = 86
 const ACTIVE_R = 94
 const NEEDLE_LENGTH = 56
 const LABEL_RADIUS = 70
+const SWEEP_DURATION_MS = 600
 
 // Zones qualitatives de la jauge, de la pire (à gauche) à la meilleure
 // (à droite), comme sur un cadran de score.
@@ -26,12 +28,38 @@ function zonePath(fromAngle, toAngle, r) {
 }
 
 // Jauge du score final : l'aiguille va de 0 point (extrême gauche)
-// à maxScore points (extrême droite).
+// à maxScore points (extrême droite). L'aiguille balaie progressivement
+// vers sa nouvelle position chaque fois que le score change, pour la
+// cinématique de fin de partie.
 export function ScoreGauge({ score, maxScore }) {
-  const ratio = maxScore > 0 ? Math.max(0, Math.min(1, score / maxScore)) : 0
-  const needleAngle = 180 - ratio * 180
-  const activeIndex = Math.min(ZONES.length - 1, Math.floor(ratio * ZONES.length))
-  const needle = pointOnArc(CX, CY, NEEDLE_LENGTH, needleAngle)
+  const targetRatio = maxScore > 0 ? Math.max(0, Math.min(1, score / maxScore)) : 0
+  const targetAngle = 180 - targetRatio * 180
+
+  const [angle, setAngle] = useState(targetAngle)
+  const angleRef = useRef(targetAngle)
+
+  useEffect(() => {
+    const start = angleRef.current
+    const delta = targetAngle - start
+    if (delta === 0) return undefined
+
+    const startTime = performance.now()
+    let frame
+    const tick = (now) => {
+      const t = Math.min(1, (now - startTime) / SWEEP_DURATION_MS)
+      const eased = 1 - Math.pow(1 - t, 3)
+      const next = start + delta * eased
+      angleRef.current = next
+      setAngle(next)
+      if (t < 1) frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [targetAngle])
+
+  const ratio = 1 - angle / 180
+  const activeIndex = Math.min(ZONES.length - 1, Math.max(0, Math.floor(ratio * ZONES.length)))
+  const needle = pointOnArc(CX, CY, NEEDLE_LENGTH, angle)
   const step = 180 / ZONES.length
 
   return (
