@@ -6,6 +6,7 @@ import { Confetti } from '../components/Confetti'
 import { useCountUp } from '../hooks/useCountUp'
 import { getGuessSourceId } from '../game/logic'
 import { playAgain } from '../game/roomApi'
+import { vibrate } from '../utils/haptics'
 
 // Cinématique de révélation : chaque manche passe par un temps de suspense
 // (l'aiguille du joueur seule) puis la révélation (palette + score ajouté).
@@ -65,7 +66,7 @@ export function Results({ roomCode, room, playerId }) {
   useEffect(() => {
     if (phase !== 'turns' || !revealed) return
     if (cumulativeScores[turnIndex + 1] - cumulativeScores[turnIndex] === 4) {
-      navigator.vibrate?.(200)
+      vibrate(200)
     }
   }, [phase, revealed, turnIndex, cumulativeScores])
 
@@ -203,7 +204,7 @@ function Finale({ score, maxScore, onDone }) {
   }, [])
 
   useEffect(() => {
-    if (showVerdict && celebrate) navigator.vibrate?.([100, 60, 100])
+    if (showVerdict && celebrate) vibrate([100, 60, 100])
   }, [showVerdict, celebrate])
 
   return (

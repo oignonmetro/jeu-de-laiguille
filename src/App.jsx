@@ -5,6 +5,7 @@ import { Lobby } from './phases/Lobby'
 import { ClueWriting } from './phases/ClueWriting'
 import { Guessing } from './phases/Guessing'
 import { Results } from './phases/Results'
+import { SettingsMenu } from './components/SettingsMenu'
 import { useRoom } from './hooks/useRoom'
 import { leaveRoom } from './game/roomApi'
 import { getOrCreatePlayerId } from './game/playerId'
@@ -49,10 +50,16 @@ function App() {
   }
 
   if (!roomCode || !isMember) {
-    if (view === 'packs') {
-      return <PackManager onBack={() => setView('home')} />
-    }
-    return <Home playerId={playerId} onEnterRoom={enterRoom} onOpenPacks={() => setView('packs')} />
+    return (
+      <>
+        <SettingsMenu />
+        {view === 'packs' ? (
+          <PackManager onBack={() => setView('home')} />
+        ) : (
+          <Home playerId={playerId} onEnterRoom={enterRoom} onOpenPacks={() => setView('packs')} />
+        )}
+      </>
+    )
   }
 
   if (loading || !room) {
@@ -98,6 +105,7 @@ function App() {
   // déconnecté ; le lobby l'affiche déjà en grand) et bouton pour quitter.
   return (
     <>
+      <SettingsMenu />
       {screen}
       <footer className="room-footer">
         {room.status !== 'lobby' && (
