@@ -113,8 +113,9 @@ export async function setRoundReady(roomCode, playerId, roundIndex, ready) {
 
 // Change le spectre d'un indice à écrire (au plus MAX_REROLLS fois par
 // indice), ainsi que la position de la palette. Le nouveau spectre évite
-// tous ceux déjà attribués au joueur dans cette partie. Transaction sur
-// les manches du joueur pour que le compteur reste fiable même en cas de
+// tous ceux déjà attribués au joueur dans cette partie, y compris ceux
+// écartés par ses rerolls précédents (pastSpectra). Transaction sur les
+// manches du joueur pour que le compteur reste fiable même en cas de
 // double clic.
 export async function rerollSpectrum(roomCode, playerId, roundIndex, spectraCount) {
   const roundsRef = ref(db, `rooms/${roomCode}/rounds/${playerId}`)
@@ -122,7 +123,8 @@ export async function rerollSpectrum(roomCode, playerId, roundIndex, spectraCoun
     const round = rounds?.[roundIndex]
     if (!round || round.ready) return rounds
     if ((round.rerolls || 0) >= MAX_REROLLS) return rounds
-    const used = rounds.map((r) => r.spectrumIndex)
+    const used = rounds.flatMap((r) => [r.spectrumIndex, ...(r.pastSpectra || [])])
+    round.pastSpectra = [...(round.pastSpectra || []), round.spectrumIndex]
     round.spectrumIndex = pickDifferentSpectrum(spectraCount, round.spectrumIndex, used)
     round.needleAngle = randomAngle()
     round.rerolls = (round.rerolls || 0) + 1

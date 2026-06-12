@@ -35,8 +35,9 @@ export function ScoreGauge({ score, maxScore }) {
   const targetRatio = maxScore > 0 ? Math.max(0, Math.min(1, score / maxScore)) : 0
   const targetAngle = 180 - targetRatio * 180
 
-  const [angle, setAngle] = useState(targetAngle)
-  const angleRef = useRef(targetAngle)
+  // Part de 0 point (extrême gauche) au montage, puis balaie vers le score.
+  const [angle, setAngle] = useState(180)
+  const angleRef = useRef(180)
 
   useEffect(() => {
     const start = angleRef.current
