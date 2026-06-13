@@ -26,6 +26,19 @@ et l'équipe marque jusqu'à 4 points par manche (24 points max à 2 joueurs,
    bouger en direct, et la position réelle est révélée à la fin du tour.
 6. Les scores s'affichent à la fin ; l'hôte peut relancer une nouvelle partie.
 
+### Modes de jeu
+
+À partir de 3 joueurs, le lobby affiche une carte **« Mode de jeu »** où
+l'hôte choisit entre :
+
+- **Solo** (par défaut) : comme décrit ci-dessus, un seul joueur devine à
+  chaque tour.
+- **Consensus** : tous les joueurs sauf l'auteur de l'indice voient la même
+  aiguille et doivent se mettre d'accord sur sa position. Chacun peut la
+  déplacer (ce qui réinitialise les accords déjà donnés) puis valider avec
+  **« Je suis d'accord »** ; le tour n'est noté que lorsque tout le monde est
+  d'accord.
+
 ### Personnaliser les spectres
 
 Depuis l'écran d'accueil, **« Gérer mes packs de spectres »** permet de créer

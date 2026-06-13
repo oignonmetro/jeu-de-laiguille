@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { DEFAULT_PACKS } from '../data/defaultPacks'
 import { getCustomPackRefs } from '../game/customPacks'
 import { loadPack } from '../game/packApi'
-import { addPack, removePack, startGame } from '../game/roomApi'
+import { addPack, removePack, setGuessMode, startGame } from '../game/roomApi'
 import { mergeSpectra } from '../game/logic'
 import { userMessage } from '../game/errors'
 
@@ -17,6 +17,7 @@ export function Lobby({ roomCode, room, playerId }) {
   const selectedNames = Object.values(selectedPacks).map((p) => p.name)
   const totalSpectra = mergeSpectra(Object.values(selectedPacks)).length
   const canStart = selectedNames.length > 0 && players.length >= 2
+  const guessMode = room.guessMode === 'consensus' ? 'consensus' : 'solo'
 
   const handleToggleDefault = async (pack) => {
     setBusy(true)
@@ -63,6 +64,18 @@ export function Lobby({ roomCode, room, playerId }) {
     }
   }
 
+  const handleSetGuessMode = async (mode) => {
+    setBusy(true)
+    setError('')
+    try {
+      await setGuessMode(roomCode, mode)
+    } catch (err) {
+      setError(userMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="app">
       <header className="app__header">
@@ -86,6 +99,42 @@ export function Lobby({ roomCode, room, playerId }) {
           ))}
         </ul>
       </div>
+
+      {players.length >= 3 && (
+        <div className="card">
+          <h2>Mode de jeu</h2>
+          {isHost ? (
+            <ul className="pack-list pack-list--selectable">
+              <li>
+                <button
+                  className={`pack-option ${guessMode === 'solo' ? 'pack-option--selected' : ''}`}
+                  onClick={() => handleSetGuessMode('solo')}
+                  disabled={busy}
+                >
+                  Solo
+                  <span className="text-muted"> · un joueur devine à chaque tour</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  className={`pack-option ${guessMode === 'consensus' ? 'pack-option--selected' : ''}`}
+                  onClick={() => handleSetGuessMode('consensus')}
+                  disabled={busy}
+                >
+                  Consensus
+                  <span className="text-muted"> · tout le monde doit se mettre d&apos;accord</span>
+                </button>
+              </li>
+            </ul>
+          ) : (
+            <p className="text-muted">
+              {guessMode === 'consensus'
+                ? "Consensus · tout le monde doit se mettre d'accord sur la position de l'aiguille"
+                : 'Solo · un joueur devine à chaque tour'}
+            </p>
+          )}
+        </div>
+      )}
 
       {isHost ? (
         <div className="card">

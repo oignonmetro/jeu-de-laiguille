@@ -122,3 +122,16 @@ export function buildTurns(order) {
   }
   return turns
 }
+
+// Mode "Consensus" : un tour par indice écrit (3 par joueur). Pas de
+// devineur unique désigné — tous les joueurs sauf l'auteur de l'indice
+// doivent se mettre d'accord sur une position avant validation.
+export function buildConsensusTurns(order) {
+  const turns = []
+  for (let roundIndex = 0; roundIndex < ROUNDS_PER_PLAYER; roundIndex++) {
+    order.forEach((sourceId) => {
+      turns.push({ sourceId, roundIndex })
+    })
+  }
+  return turns
+}

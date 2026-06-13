@@ -30,15 +30,18 @@ export function Results({ roomCode, room, playerId }) {
   const isHost = room.hostId === playerId
   const maxScore = room.turns.length * 4
 
+  const isConsensus = room.guessMode === 'consensus'
+
   // Score cumulé après chaque tour, dans l'ordre de révélation de la cinématique.
   const cumulativeScores = useMemo(() => {
     const scores = [0]
     room.turns.forEach((turn) => {
-      const score = room.results[turn.guesserId][turn.roundIndex].score
+      const resultsId = isConsensus ? turn.sourceId : turn.guesserId
+      const score = room.results[resultsId][turn.roundIndex].score
       scores.push(scores[scores.length - 1] + score)
     })
     return scores
-  }, [room.turns, room.results])
+  }, [room.turns, room.results, isConsensus])
 
   const revealed = stage === 'gauge'
   const displayedScore = cumulativeScores[turnIndex + (revealed ? 1 : 0)]
@@ -84,10 +87,11 @@ export function Results({ roomCode, room, playerId }) {
 
   if (phase === 'turns' && room.turns.length > 0) {
     const turn = room.turns[turnIndex]
-    const entry = room.results[turn.guesserId][turn.roundIndex]
+    const resultsId = isConsensus ? turn.sourceId : turn.guesserId
+    const entry = room.results[resultsId][turn.roundIndex]
     const spectrum = room.pack.spectra[entry.spectrumIndex]
     const sourceName = room.players[turn.sourceId].name
-    const guesserName = room.players[turn.guesserId].name
+    const guesserName = isConsensus ? 'Tout le monde' : room.players[turn.guesserId].name
     const progress = `Manche ${turnIndex + 1} / ${room.turns.length}`
     const pulse = revealed && entry.score === 4
 
@@ -150,13 +154,14 @@ export function Results({ roomCode, room, playerId }) {
         <ScoreGauge score={room.score} maxScore={maxScore} />
       </div>
 
-      {room.order.map((guesserId) => {
-        const sourceId = getGuessSourceId(room.order, guesserId)
-        const entries = room.results[guesserId]
+      {room.order.map((id) => {
+        const sourceId = isConsensus ? id : getGuessSourceId(room.order, id)
+        const guesserLabel = isConsensus ? 'Tout le monde' : room.players[id].name
+        const entries = room.results[id]
         return (
-          <div className="card" key={guesserId}>
+          <div className="card" key={id}>
             <h2>
-              {room.players[sourceId].name} ➜ {room.players[guesserId].name}
+              {room.players[sourceId].name} ➜ {guesserLabel}
             </h2>
             {entries.map((entry, i) => {
               const spectrum = room.pack.spectra[entry.spectrumIndex]

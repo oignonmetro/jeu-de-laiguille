@@ -4,6 +4,7 @@ import { generateRoomCode } from './codes'
 import { AppError } from './errors'
 import {
   assignRounds,
+  buildConsensusTurns,
   buildTurns,
   computeScore,
   mergeSpectra,
@@ -130,6 +131,16 @@ export async function removePack(roomCode, packId) {
   })
 }
 
+// Choisit le mode de devinette pour les parties à 3 joueurs ou plus :
+// 'solo' (un joueur devine à chaque tour) ou 'consensus' (tous les joueurs
+// sauf l'auteur de l'indice doivent se mettre d'accord).
+export async function setGuessMode(roomCode, mode) {
+  await update(ref(db, `rooms/${roomCode}`), {
+    guessMode: mode,
+    lastActivityAt: Date.now(),
+  })
+}
+
 export async function startGame(roomCode, room) {
   const order = room.order
   const packs = Object.values(room.packs || {})
@@ -192,6 +203,50 @@ export async function setLiveAngle(roomCode, angle) {
   })
 }
 
+// Mode "Consensus" : position proposée, diffusée en direct comme setLiveAngle.
+// Tout déplacement remet à zéro les accords déjà donnés, puisqu'ils portaient
+// sur l'ancienne position.
+export async function setConsensusAngle(roomCode, angle) {
+  await update(ref(db, `rooms/${roomCode}`), {
+    liveAngle: angle,
+    consensusAgreements: null,
+    lastActivityAt: Date.now(),
+  })
+}
+
+// Mode "Consensus" : enregistre l'accord d'un joueur sur la position actuelle
+// de l'aiguille, sur sa propre clé (jamais de conflit entre joueurs, donc pas
+// besoin de transaction). La validation finale est déclenchée séparément par
+// finalizeConsensus dès que tout le monde a donné son accord.
+export async function agreeOnConsensus(roomCode, playerId) {
+  await update(ref(db, `rooms/${roomCode}`), {
+    [`consensusAgreements/${playerId}`]: true,
+    lastActivityAt: Date.now(),
+  })
+}
+
+// Mode "Consensus" : calcule le score et passe le tour en "reveal" une fois
+// que tous les joueurs concernés ont donné leur accord. Appelée côté client
+// par tous les joueurs concernés dès que la condition est remplie : le
+// résultat étant déterministe, des écritures concurrentes convergent vers le
+// même état (pas besoin de transaction).
+export async function finalizeConsensus(roomCode, params) {
+  const { sourceId, roundIndex, needleAngle, guessedAngle, spectrumIndex, clue, currentScore } = params
+  const score = computeScore(needleAngle, guessedAngle)
+  await update(ref(db, `rooms/${roomCode}`), {
+    [`results/${sourceId}/${roundIndex}`]: {
+      spectrumIndex,
+      clue,
+      actualAngle: needleAngle,
+      guessedAngle,
+      score,
+    },
+    score: (currentScore || 0) + score,
+    turnPhase: 'reveal',
+    lastActivityAt: Date.now(),
+  })
+}
+
 // Fait avancer la salle de "clue-writing" à "guessing" si tous les indices
 // sont prêts, et construit la liste des tours de devinette. Utilise une
 // transaction pour qu'un seul client effectue le changement même si
@@ -205,10 +260,11 @@ export async function tryAdvanceToGuessing(roomCode) {
     )
     if (!allReady) return room
     room.status = 'guessing'
-    room.turns = buildTurns(room.order)
+    room.turns = room.guessMode === 'consensus' ? buildConsensusTurns(room.order) : buildTurns(room.order)
     room.currentTurn = 0
     room.turnPhase = 'guessing'
     room.liveAngle = 90
+    room.consensusAgreements = null
     room.lastActivityAt = Date.now()
     return room
   })
@@ -261,6 +317,7 @@ export async function advanceTurn(roomCode, turnIndex) {
       room.turnPhase = 'guessing'
       room.liveAngle = 90
     }
+    room.consensusAgreements = null
     room.lastActivityAt = Date.now()
     return room
   })
@@ -276,6 +333,7 @@ export async function playAgain(roomCode) {
     currentTurn: null,
     turnPhase: null,
     liveAngle: null,
+    consensusAgreements: null,
     score: 0,
     lastActivityAt: Date.now(),
   })
