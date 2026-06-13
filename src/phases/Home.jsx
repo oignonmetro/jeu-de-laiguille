@@ -4,7 +4,7 @@ import { userMessage } from '../game/errors'
 
 const NAME_STORAGE_KEY = 'demi-cercle:player-name'
 
-export function Home({ playerId, onEnterRoom, onOpenPacks }) {
+export function Home({ playerId, onEnterRoom, onOpenPacks, notice }) {
   const [name, setName] = useState(() => localStorage.getItem(NAME_STORAGE_KEY) || '')
   const [joinCode, setJoinCode] = useState('')
   const [error, setError] = useState('')
@@ -59,6 +59,12 @@ export function Home({ playerId, onEnterRoom, onOpenPacks }) {
       <header className="app__header">
         <h1 className="app__title">Demi-Cercle</h1>
       </header>
+
+      {notice && (
+        <div className="card">
+          <p className="text-muted">{notice}</p>
+        </div>
+      )}
 
       <div className="card field">
         <label htmlFor="player-name">Ton prénom</label>

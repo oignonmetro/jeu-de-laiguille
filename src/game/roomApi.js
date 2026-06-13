@@ -12,15 +12,22 @@ import {
   MAX_REROLLS,
 } from './logic'
 
+// Une salle sans aucune action de jeu (cf. lastActivityAt, mis à jour par
+// toutes les fonctions ci-dessous qui font progresser la partie) pendant ce
+// délai est considérée abandonnée et peut être supprimée.
+const ROOM_INACTIVITY_MS = 15 * 60 * 1000
+
 export async function createRoom(playerId, playerName) {
   for (let attempt = 0; attempt < 5; attempt++) {
     const roomCode = generateRoomCode()
     const roomRef = ref(db, `rooms/${roomCode}`)
     const snapshot = await get(roomRef)
-    if (snapshot.exists()) continue
+    // Un code déjà pris mais dont la salle est inactive est libéré et réutilisé.
+    if (snapshot.exists() && !(await cleanupIfInactive(roomCode))) continue
 
     await set(roomRef, {
       createdAt: serverTimestamp(),
+      lastActivityAt: Date.now(),
       hostId: playerId,
       status: 'lobby',
       players: {
@@ -40,6 +47,9 @@ export async function joinRoom(roomCode, playerId, playerName) {
   if (!snapshot.exists()) {
     throw new AppError("Cette salle n'existe pas.")
   }
+  if (await cleanupIfInactive(roomCode)) {
+    throw new AppError("Cette salle n'existe pas.")
+  }
   const room = snapshot.val()
   if (room.players?.[playerId]) {
     return
@@ -51,7 +61,36 @@ export async function joinRoom(roomCode, playerId, playerName) {
   await update(roomRef, {
     [`players/${playerId}`]: { name: playerName },
     order,
+    lastActivityAt: Date.now(),
   })
+}
+
+// Supprime la salle si elle est inactive depuis plus de ROOM_INACTIVITY_MS.
+// Transaction : sans danger en cas d'appel concurrent (relit l'état le plus
+// récent avant de décider), et sert aussi bien à libérer un code de salle
+// abandonné (createRoom) qu'à nettoyer la base (joinRoom, vérification
+// périodique côté client dans App).
+export async function cleanupIfInactive(roomCode) {
+  const roomRef = ref(db, `rooms/${roomCode}`)
+  let deleted = false
+  let firstAttempt = true
+  await runTransaction(roomRef, (room) => {
+    // Sans listener déjà actif sur ce chemin, le SDK appelle cette fonction
+    // une première fois avec `room === null` (valeur locale inconnue) avant
+    // de retenter avec la vraie valeur du serveur : on renvoie `null` pour
+    // déclencher cette nouvelle tentative plutôt que d'abandonner à tort en
+    // pensant que la salle n'existe pas.
+    if (room === null && firstAttempt) {
+      firstAttempt = false
+      return null
+    }
+    if (!room) return undefined
+    const lastActivity = room.lastActivityAt ?? room.createdAt ?? 0
+    if (Date.now() - lastActivity < ROOM_INACTIVITY_MS) return undefined
+    deleted = true
+    return null
+  })
+  return deleted
 }
 
 export function subscribeRoom(roomCode, callback) {
@@ -70,6 +109,7 @@ export async function leaveRoom(roomCode, playerId) {
     room.order = (room.order || []).filter((id) => id !== playerId)
     if (room.order.length === 0) return null
     if (room.hostId === playerId) room.hostId = room.order[0]
+    room.lastActivityAt = Date.now()
     return room
   })
 }
@@ -77,14 +117,17 @@ export async function leaveRoom(roomCode, playerId) {
 // Ajoute / retire un pack de la sélection de la partie. Plusieurs packs
 // peuvent être sélectionnés : leurs spectres seront fusionnés au démarrage.
 export async function addPack(roomCode, pack) {
-  await set(ref(db, `rooms/${roomCode}/packs/${pack.id}`), {
-    name: pack.name,
-    spectra: pack.spectra,
+  await update(ref(db, `rooms/${roomCode}`), {
+    [`packs/${pack.id}`]: { name: pack.name, spectra: pack.spectra },
+    lastActivityAt: Date.now(),
   })
 }
 
 export async function removePack(roomCode, packId) {
-  await set(ref(db, `rooms/${roomCode}/packs/${packId}`), null)
+  await update(ref(db, `rooms/${roomCode}`), {
+    [`packs/${packId}`]: null,
+    lastActivityAt: Date.now(),
+  })
 }
 
 export async function startGame(roomCode, room) {
@@ -101,15 +144,22 @@ export async function startGame(roomCode, room) {
     },
     rounds,
     results: null,
+    lastActivityAt: Date.now(),
   })
 }
 
 export async function submitClue(roomCode, playerId, roundIndex, clue) {
-  await update(ref(db, `rooms/${roomCode}/rounds/${playerId}/${roundIndex}`), { clue })
+  await update(ref(db, `rooms/${roomCode}`), {
+    [`rounds/${playerId}/${roundIndex}/clue`]: clue,
+    lastActivityAt: Date.now(),
+  })
 }
 
 export async function setRoundReady(roomCode, playerId, roundIndex, ready) {
-  await update(ref(db, `rooms/${roomCode}/rounds/${playerId}/${roundIndex}`), { ready })
+  await update(ref(db, `rooms/${roomCode}`), {
+    [`rounds/${playerId}/${roundIndex}/ready`]: ready,
+    lastActivityAt: Date.now(),
+  })
 }
 
 // Change le spectre d'un indice à écrire (au plus MAX_REROLLS fois par
@@ -134,9 +184,12 @@ export async function rerollSpectrum(roomCode, playerId, roundIndex, spectraCoun
 }
 
 // Position de l'aiguille du devineur, diffusée en direct aux autres joueurs
-// pendant qu'il hésite. Écriture légère (un seul nombre), throttlée côté client.
+// pendant qu'il hésite. Écriture légère, throttlée côté client.
 export async function setLiveAngle(roomCode, angle) {
-  await set(ref(db, `rooms/${roomCode}/liveAngle`), angle)
+  await update(ref(db, `rooms/${roomCode}`), {
+    liveAngle: angle,
+    lastActivityAt: Date.now(),
+  })
 }
 
 // Fait avancer la salle de "clue-writing" à "guessing" si tous les indices
@@ -156,6 +209,7 @@ export async function tryAdvanceToGuessing(roomCode) {
     room.currentTurn = 0
     room.turnPhase = 'guessing'
     room.liveAngle = 90
+    room.lastActivityAt = Date.now()
     return room
   })
 }
@@ -186,6 +240,7 @@ export async function submitTurnGuess(roomCode, turnIndex, guessedAngle) {
     room.score = (room.score || 0) + score
     room.liveAngle = guessedAngle
     room.turnPhase = 'reveal'
+    room.lastActivityAt = Date.now()
     return room
   })
 }
@@ -206,6 +261,7 @@ export async function advanceTurn(roomCode, turnIndex) {
       room.turnPhase = 'guessing'
       room.liveAngle = 90
     }
+    room.lastActivityAt = Date.now()
     return room
   })
 }
@@ -221,5 +277,6 @@ export async function playAgain(roomCode) {
     turnPhase: null,
     liveAngle: null,
     score: 0,
+    lastActivityAt: Date.now(),
   })
 }

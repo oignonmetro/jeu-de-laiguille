@@ -8,10 +8,12 @@ import { getGuessSourceId } from '../game/logic'
 import { playAgain } from '../game/roomApi'
 import { vibrate } from '../utils/haptics'
 
-// Cinématique de révélation : chaque manche passe par un temps de suspense
-// (l'aiguille du joueur seule) puis la révélation (palette + score ajouté).
-const SUSPENSE_MS = 2500
-const REVEAL_MS = 6000
+// Cinématique de révélation : chaque manche se déroule en deux étapes —
+// 1) présentation du résultat (palette, aiguille, score de la manche)
+// 2) la jauge du score total avance vers le nouveau cumul (ou reste en
+// place si la manche n'a rapporté aucun point).
+const RESULT_MS = 4000
+const GAUGE_MS = 1800
 // Balayage lent de la jauge sur l'écran de score final.
 const FINALE_SWEEP_MS = 2400
 // Part du score max à partir de laquelle on fête le résultat aux confettis
@@ -24,7 +26,7 @@ export function Results({ roomCode, room, playerId }) {
   // dramatisé ; 'recap' : récapitulatif détaillé complet.
   const [phase, setPhase] = useState('turns')
   const [turnIndex, setTurnIndex] = useState(0)
-  const [stage, setStage] = useState('suspense')
+  const [stage, setStage] = useState('result')
   const isHost = room.hostId === playerId
   const maxScore = room.turns.length * 4
 
@@ -38,26 +40,27 @@ export function Results({ roomCode, room, playerId }) {
     return scores
   }, [room.turns, room.results])
 
-  const revealed = stage === 'reveal'
+  const revealed = stage === 'gauge'
   const displayedScore = cumulativeScores[turnIndex + (revealed ? 1 : 0)]
   const countedScore = useCountUp(displayedScore)
 
-  // Avancement automatique : suspense → révélation → manche suivante,
-  // puis écran de finale après la dernière manche.
+  // Avancement automatique : présentation du résultat de la manche → la
+  // jauge totale avance vers le nouveau cumul → manche suivante, puis écran
+  // de finale après la dernière manche.
   useEffect(() => {
     if (phase !== 'turns') return undefined
     const timer = setTimeout(
       () => {
         if (!revealed) {
-          setStage('reveal')
+          setStage('gauge')
         } else if (turnIndex + 1 < room.turns.length) {
           setTurnIndex(turnIndex + 1)
-          setStage('suspense')
+          setStage('result')
         } else {
           setPhase('finale')
         }
       },
-      revealed ? REVEAL_MS : SUSPENSE_MS
+      revealed ? GAUGE_MS : RESULT_MS
     )
     return () => clearTimeout(timer)
   }, [phase, turnIndex, revealed, room.turns.length])
@@ -113,17 +116,13 @@ export function Results({ roomCode, room, playerId }) {
             {sourceName} ➜ {guesserName}
           </p>
           <p className="clue-text">« {entry.clue} »</p>
-          {revealed ? (
-            <Semicircle
-              spectrum={spectrum}
-              mode="result"
-              angle={entry.guessedAngle}
-              targetAngle={entry.actualAngle}
-              score={entry.score}
-            />
-          ) : (
-            <Semicircle spectrum={spectrum} mode="display" angle={entry.guessedAngle} />
-          )}
+          <Semicircle
+            spectrum={spectrum}
+            mode="result"
+            angle={entry.guessedAngle}
+            targetAngle={entry.actualAngle}
+            score={entry.score}
+          />
         </div>
 
         <button className="btn btn--ghost" onClick={() => setPhase('finale')}>

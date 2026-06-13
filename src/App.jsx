@@ -7,12 +7,17 @@ import { Guessing } from './phases/Guessing'
 import { Results } from './phases/Results'
 import { SettingsMenu } from './components/SettingsMenu'
 import { useRoom } from './hooks/useRoom'
-import { leaveRoom } from './game/roomApi'
+import { leaveRoom, cleanupIfInactive } from './game/roomApi'
 import { getOrCreatePlayerId } from './game/playerId'
 import { firebaseConfigured } from './firebase'
 import './App.css'
 
 const ROOM_STORAGE_KEY = 'demi-cercle:room-code'
+// Fréquence à laquelle un client connecté vérifie si la salle est restée
+// inactive assez longtemps pour être nettoyée (cf. ROOM_INACTIVITY_MS côté
+// roomApi) — utile pour les onglets laissés ouverts sans qu'une partie
+// n'avance.
+const ROOM_CHECK_INTERVAL_MS = 60 * 1000
 
 function App() {
   const [playerId] = useState(getOrCreatePlayerId)
@@ -25,15 +30,29 @@ function App() {
     setRoomCode(code)
   }
 
-  // Si la salle stockée n'existe plus ou ne nous contient pas, on oublie ce
-  // code et on revient à l'accueil au prochain chargement.
-  const isMember = !roomCode || loading || !room || Boolean(room.players?.[playerId])
+  // Si la salle stockée n'existe plus (supprimée pour inactivité, code
+  // invalide) ou ne nous contient pas, on revient à l'accueil. `roomClosed`
+  // permet de distinguer "la salle a bien existé puis disparu" pour afficher
+  // un message, et on oublie le code stocké au prochain chargement.
+  const isMember = !roomCode || loading || Boolean(room?.players?.[playerId])
+  const roomClosed = Boolean(roomCode) && !loading && room === null
 
   useEffect(() => {
-    if (roomCode && !loading && room && !room.players?.[playerId]) {
+    if (roomCode && !loading && (!room || !room.players?.[playerId])) {
       sessionStorage.removeItem(ROOM_STORAGE_KEY)
     }
   }, [roomCode, loading, room, playerId])
+
+  // Vérification périodique : si la salle est inactive depuis trop
+  // longtemps, elle est supprimée (déclenchée par n'importe quel client
+  // encore connecté, par exemple un onglet resté ouvert sans jouer).
+  useEffect(() => {
+    if (!roomCode || loading || !room) return undefined
+    const interval = setInterval(() => {
+      cleanupIfInactive(roomCode).catch(() => {})
+    }, ROOM_CHECK_INTERVAL_MS)
+    return () => clearInterval(interval)
+  }, [roomCode, loading, room])
 
   if (!firebaseConfigured) {
     return (
@@ -56,7 +75,12 @@ function App() {
         {view === 'packs' ? (
           <PackManager onBack={() => setView('home')} />
         ) : (
-          <Home playerId={playerId} onEnterRoom={enterRoom} onOpenPacks={() => setView('packs')} />
+          <Home
+            playerId={playerId}
+            onEnterRoom={enterRoom}
+            onOpenPacks={() => setView('packs')}
+            notice={roomClosed ? "La salle a été fermée après une longue inactivité." : ''}
+          />
         )}
       </>
     )
