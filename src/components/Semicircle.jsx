@@ -8,6 +8,11 @@ const CY = 100
 const R = 92
 const NEEDLE_LENGTH = 78
 const ZONE_LABEL_RADIUS = 82
+// Largeur/hauteur du repère SVG. La hauteur dépasse le diamètre (y = 100) pour
+// laisser visibles les zones 3 et 2 points de la palette qui débordent sous la
+// base quand le centre (4 points) est tout au bord (≈ y 135 au plus bas).
+const VIEW_WIDTH = 200
+const VIEW_HEIGHT = 138
 
 function zonePath(fromAngle, toAngle) {
   const outer = pointOnArc(CX, CY, R, toAngle)
@@ -31,8 +36,8 @@ export function Semicircle({
       const svg = svgRef.current
       if (!svg) return
       const rect = svg.getBoundingClientRect()
-      const px = ((event.clientX - rect.left) / rect.width) * 200
-      const py = ((event.clientY - rect.top) / rect.height) * 115
+      const px = ((event.clientX - rect.left) / rect.width) * VIEW_WIDTH
+      const py = ((event.clientY - rect.top) / rect.height) * VIEW_HEIGHT
       const newAngle = angleFromPointer(CX, CY, px, py)
       onChange?.(Math.round(newAngle))
     },
@@ -64,7 +69,7 @@ export function Semicircle({
     <div className="semicircle">
       <svg
         ref={svgRef}
-        viewBox="0 0 200 115"
+        viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
         className={`semicircle__svg semicircle__svg--${mode}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
