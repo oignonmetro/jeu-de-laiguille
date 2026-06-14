@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/demi-cercle/',
+  base: '/jeu-de-laiguille/',
   plugins: [
     react(),
     VitePWA({
@@ -17,8 +17,8 @@ export default defineConfig({
         theme_color: '#1e1b2e',
         background_color: '#1e1b2e',
         display: 'standalone',
-        start_url: '/demi-cercle/',
-        scope: '/demi-cercle/',
+        start_url: '/jeu-de-laiguille/',
+        scope: '/jeu-de-laiguille/',
         icons: [
           {
             src: 'icon.svg',
