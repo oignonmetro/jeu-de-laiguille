@@ -57,7 +57,7 @@ export function Home({ playerId, onEnterRoom, onOpenPacks, notice }) {
   return (
     <div className="app">
       <header className="app__header">
-        <h1 className="app__title">Demi-Cercle</h1>
+        <h1 className="app__title">Le jeu de l'aiguille</h1>
       </header>
 
       {notice && (
