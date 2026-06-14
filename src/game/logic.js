@@ -26,12 +26,12 @@ export const PALETTE_ZONES = [
   { from: 13.5, to: 22.5, points: 2 },
 ]
 
-// Centre de palette sur tout le demi-cercle (0° à 180°) : la zone à 4 points
-// peut atteindre les deux extrêmes. Les parties 3 et 2 points qui débordent
-// alors sous le diamètre restent visibles grâce à la hauteur étendue du
-// viewBox de la Semicircle.
+// Centre de palette entre 4,5° et 175,5° : la zone à 4 points (large de ±4,5°)
+// reste ainsi entièrement au-dessus du diamètre quelle que soit la position de
+// l'aiguille, sans jamais être rognée. Les zones 3 et 2 points peuvent encore
+// déborder un peu sous la base, où elles sont masquées par le rognage.
 export function randomAngle() {
-  return Math.random() * 180
+  return Math.random() * 171 + 4.5
 }
 
 // Points (0 à 4) selon la zone de la palette où tombe l'aiguille devinée.
