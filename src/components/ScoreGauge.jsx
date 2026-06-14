@@ -20,7 +20,7 @@ function zonePath(fromAngle, toAngle, r) {
 // à maxScore points (extrême droite). L'aiguille balaie progressivement
 // vers sa nouvelle position chaque fois que le score change, pour la
 // cinématique de fin de partie.
-export function ScoreGauge({ score, maxScore, sweepDurationMs = 600 }) {
+export function ScoreGauge({ score, maxScore, sweepDurationMs = 600, shake = false }) {
   const targetRatio = maxScore > 0 ? Math.max(0, Math.min(1, score / maxScore)) : 0
   const targetAngle = 180 - targetRatio * 180
 
@@ -53,7 +53,7 @@ export function ScoreGauge({ score, maxScore, sweepDurationMs = 600 }) {
   const step = 180 / ZONES.length
 
   return (
-    <svg viewBox="0 0 200 115" className="score-gauge">
+    <svg viewBox="0 0 200 115" className={`score-gauge${shake ? ' score-gauge--shake' : ''}`}>
       {ZONES.map((zone, i) => {
         const active = i === activeIndex
         const from = 180 - (i + 1) * step

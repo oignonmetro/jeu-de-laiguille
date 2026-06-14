@@ -12,8 +12,8 @@ import { vibrate } from '../utils/haptics'
 // 1) présentation du résultat (palette, aiguille, score de la manche)
 // 2) la jauge du score total avance vers le nouveau cumul (ou reste en
 // place si la manche n'a rapporté aucun point).
-const RESULT_MS = 4000
-const GAUGE_MS = 1800
+const RESULT_MS = 2800
+const GAUGE_MS = 1300
 // Balayage lent de la jauge sur l'écran de score final.
 const FINALE_SWEEP_MS = 2400
 // Part du score max à partir de laquelle on fête le résultat aux confettis
@@ -68,12 +68,14 @@ export function Results({ roomCode, room, playerId }) {
     return () => clearTimeout(timer)
   }, [phase, turnIndex, revealed, room.turns.length])
 
-  // Petit retour haptique au moment où une manche à 4 points est révélée.
+  // Retour haptique au moment où la jauge réagit : franc pour une manche à
+  // 4 points, petit soubresaut « raté » quand la manche ne rapporte rien
+  // (en écho au tremblement de la jauge).
   useEffect(() => {
     if (phase !== 'turns' || !revealed) return
-    if (cumulativeScores[turnIndex + 1] - cumulativeScores[turnIndex] === 4) {
-      vibrate(200)
-    }
+    const gain = cumulativeScores[turnIndex + 1] - cumulativeScores[turnIndex]
+    if (gain === 4) vibrate(200)
+    else if (gain === 0) vibrate([30, 40, 30])
   }, [phase, revealed, turnIndex, cumulativeScores])
 
   const handlePlayAgain = async () => {
@@ -111,7 +113,11 @@ export function Results({ roomCode, room, playerId }) {
           >
             {countedScore} <span className="text-muted">/ {maxScore}</span>
           </p>
-          <ScoreGauge score={displayedScore} maxScore={maxScore} />
+          <ScoreGauge
+            score={displayedScore}
+            maxScore={maxScore}
+            shake={revealed && entry.score === 0}
+          />
         </div>
 
         {/* key={turnIndex} : rejoue la transition d'entrée à chaque manche */}
