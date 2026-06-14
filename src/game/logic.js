@@ -26,10 +26,12 @@ export const PALETTE_ZONES = [
   { from: 13.5, to: 22.5, points: 2 },
 ]
 
-// Centre de palette entre 22,5° et 157,5° pour que les 45° de la palette
-// restent entièrement sur le demi-cercle.
+// Centre de palette sur tout le demi-cercle (0° à 180°) : la zone à 4 points
+// peut atteindre les deux extrêmes. Les parties 3 et 2 points qui débordent
+// alors sous le diamètre restent visibles grâce à la hauteur étendue du
+// viewBox de la Semicircle.
 export function randomAngle() {
-  return Math.random() * 135 + 22.5
+  return Math.random() * 180
 }
 
 // Points (0 à 4) selon la zone de la palette où tombe l'aiguille devinée.
