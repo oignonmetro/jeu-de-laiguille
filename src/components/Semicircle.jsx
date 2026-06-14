@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useId, useRef } from 'react'
 import { angleFromPointer, pointOnArc } from '../utils/angle'
 import { PALETTE_ZONES } from '../game/logic'
 import './Semicircle.css'
@@ -8,11 +8,12 @@ const CY = 100
 const R = 92
 const NEEDLE_LENGTH = 78
 const ZONE_LABEL_RADIUS = 82
-// Largeur/hauteur du repère SVG. La hauteur dépasse le diamètre (y = 100) pour
-// laisser visibles les zones 3 et 2 points de la palette qui débordent sous la
-// base quand le centre (4 points) est tout au bord (≈ y 135 au plus bas).
+// Repère SVG. La palette de score est rognée au niveau du diamètre (y = 100) :
+// quand son centre approche d'un bord, la partie qui passerait sous la ligne de
+// base est masquée (comme si elle glissait derrière l'arrière-plan) plutôt que
+// de flotter dans le vide.
 const VIEW_WIDTH = 200
-const VIEW_HEIGHT = 138
+const VIEW_HEIGHT = 115
 
 function zonePath(fromAngle, toAngle) {
   const outer = pointOnArc(CX, CY, R, toAngle)
@@ -30,6 +31,7 @@ export function Semicircle({
 }) {
   const svgRef = useRef(null)
   const draggingRef = useRef(false)
+  const clipId = useId()
 
   const updateFromEvent = useCallback(
     (event) => {
@@ -76,32 +78,44 @@ export function Semicircle({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
       >
-        <path d="M 8 100 A 92 92 0 0 1 192 100" className="semicircle__arc" />
-        <line x1="8" y1="100" x2="192" y2="100" className="semicircle__base" />
+        <defs>
+          {/* Rogne la palette au-dessus du diamètre : tout ce qui dépasserait
+              sous la ligne de base est masqué. */}
+          <clipPath id={clipId}>
+            <rect x="0" y="0" width={VIEW_WIDTH} height={CY} />
+          </clipPath>
+        </defs>
 
-        {targetAngle != null &&
-          PALETTE_ZONES.map((zone) => {
-            const labelAngle = targetAngle + (zone.from + zone.to) / 2
-            const labelPos = pointOnArc(CX, CY, ZONE_LABEL_RADIUS, labelAngle)
-            return (
-              <g key={zone.from}>
-                <path
-                  d={zonePath(targetAngle + zone.from, targetAngle + zone.to)}
-                  className={`semicircle__zone semicircle__zone--${zone.points}`}
-                />
-                <text
-                  x={labelPos.x}
-                  y={labelPos.y}
-                  className="semicircle__zone-label"
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  transform={`rotate(${90 - labelAngle} ${labelPos.x} ${labelPos.y})`}
-                >
-                  {zone.points}
-                </text>
-              </g>
-            )
-          })}
+        <path d="M 8 100 A 92 92 0 0 1 192 100" className="semicircle__arc" />
+
+        {targetAngle != null && (
+          <g clipPath={`url(#${clipId})`}>
+            {PALETTE_ZONES.map((zone) => {
+              const labelAngle = targetAngle + (zone.from + zone.to) / 2
+              const labelPos = pointOnArc(CX, CY, ZONE_LABEL_RADIUS, labelAngle)
+              return (
+                <g key={zone.from}>
+                  <path
+                    d={zonePath(targetAngle + zone.from, targetAngle + zone.to)}
+                    className={`semicircle__zone semicircle__zone--${zone.points}`}
+                  />
+                  <text
+                    x={labelPos.x}
+                    y={labelPos.y}
+                    className="semicircle__zone-label"
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    transform={`rotate(${90 - labelAngle} ${labelPos.x} ${labelPos.y})`}
+                  >
+                    {zone.points}
+                  </text>
+                </g>
+              )
+            })}
+          </g>
+        )}
+
+        <line x1="8" y1="100" x2="192" y2="100" className="semicircle__base" />
 
         {showNeedle && (
           <line x1={CX} y1={CY} x2={needle.x} y2={needle.y} className="semicircle__needle" />
