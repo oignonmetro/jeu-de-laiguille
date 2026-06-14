@@ -5,6 +5,38 @@
   display: block;
 }
 
+/* Manche à 0 point : la jauge tremble sur place pour signaler que
+   l'aiguille du score ne bougera pas. */
+.score-gauge--shake {
+  animation: score-gauge-shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes score-gauge-shake {
+  10%,
+  90% {
+    transform: translateX(-2px);
+  }
+  20%,
+  80% {
+    transform: translateX(4px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-7px);
+  }
+  40%,
+  60% {
+    transform: translateX(7px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .score-gauge--shake {
+    animation: none;
+  }
+}
+
 .score-gauge__label {
   font-size: 6px;
   font-weight: 700;
