@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
       manifest: {
-        name: 'Demi-Cercle',
-        short_name: 'Demi-Cercle',
+        name: "Le jeu de l'aiguille",
+        short_name: "L'aiguille",
         description: "Jeu de devinette de spectres entre amis",
         theme_color: '#1e1b2e',
         background_color: '#1e1b2e',
