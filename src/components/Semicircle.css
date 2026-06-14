@@ -21,6 +21,15 @@
   stroke-width: 3;
 }
 
+/* Cercle complet en arrière-plan, qui « porte » la palette de score quand
+   elle dépasse sous la ligne pointillée (cible proche d'un bord). */
+.semicircle__guide-circle {
+  fill: none;
+  stroke: var(--color-surface-alt);
+  stroke-width: 3;
+  opacity: 0.35;
+}
+
 .semicircle__base {
   stroke: var(--color-surface-alt);
   stroke-width: 2;

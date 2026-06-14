@@ -76,6 +76,9 @@ export function Semicircle({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
       >
+        {targetAngle != null && (
+          <circle cx={CX} cy={CY} r={R} className="semicircle__guide-circle" />
+        )}
         <path d="M 8 100 A 92 92 0 0 1 192 100" className="semicircle__arc" />
         <line x1="8" y1="100" x2="192" y2="100" className="semicircle__base" />
 
