@@ -66,6 +66,7 @@ export const DEFAULT_PACKS = [
       { left: 'Bon date', right: 'Mauvais date' },
       { left: 'Bon endroit pour faire l\'amour', right: 'Mauvais endroit pour faire l\'amour' },
       { left: 'Bon sextoy', right: 'Mauvais sextoy' },
+      { left: 'Amitié féminine', right: 'Amitié masculine' },
     ],
   },
   {
