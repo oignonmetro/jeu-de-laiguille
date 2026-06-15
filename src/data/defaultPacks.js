@@ -24,6 +24,7 @@ export const DEFAULT_PACKS = [
       { left: 'Confortable', right: 'Inconfortable' },
       { left: 'Littéraire', right: 'Scientifique' },
       { left: 'Petit', right: 'Grand' },
+      { left: 'Personne ne fait ça', right: 'Tout le monde fait ça' },
     ],
   },
   {
@@ -40,6 +41,7 @@ export const DEFAULT_PACKS = [
       { left: 'Traditionnel', right: 'Moderne' },
       { left: 'Intellectuel', right: 'Divertissant' },
       { left: 'Consensuel', right: 'Clivant' },
+      { left: 'Culture du vide', right: 'Haute culture' },
     ],
   },
   {
@@ -67,6 +69,7 @@ export const DEFAULT_PACKS = [
       { left: 'Bon endroit pour faire l\'amour', right: 'Mauvais endroit pour faire l\'amour' },
       { left: 'Bon sextoy', right: 'Mauvais sextoy' },
       { left: 'Amitié féminine', right: 'Amitié masculine' },
+      { left: 'À ne pas pécho', right: 'À pécho' },
     ],
   },
   {
