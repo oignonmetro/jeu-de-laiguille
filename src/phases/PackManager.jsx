@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { savePack, loadPack, updatePack } from '../game/packApi'
+import { AppHeader } from '../components/SettingsMenu'
 import { addCustomPackRef, getCustomPackRefs, removeCustomPackRef } from '../game/customPacks'
 import { userMessage } from '../game/errors'
 
@@ -121,12 +122,12 @@ export function PackManager({ onBack }) {
 
   return (
     <div className="app">
-      <header className="app__header">
+      <AppHeader>
         <button className="btn btn--ghost btn--small" onClick={onBack}>
           ← Retour
         </button>
         <h1 className="app__title">Mes packs</h1>
-      </header>
+      </AppHeader>
 
       {savedCode && (
         <div className="card">

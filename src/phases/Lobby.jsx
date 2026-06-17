@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { DEFAULT_PACKS } from '../data/defaultPacks'
+import { AppHeader } from '../components/SettingsMenu'
 import { getCustomPackRefs } from '../game/customPacks'
 import { loadPack } from '../game/packApi'
 import { addPack, removePack, setGuessMode, startGame } from '../game/roomApi'
@@ -78,9 +79,9 @@ export function Lobby({ roomCode, room, playerId }) {
 
   return (
     <div className="app">
-      <header className="app__header">
+      <AppHeader>
         <h1 className="app__title">Le jeu de l'aiguille</h1>
-      </header>
+      </AppHeader>
 
       <div className="card">
         <p className="text-muted">Code de la salle</p>

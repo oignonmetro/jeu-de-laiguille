@@ -18,6 +18,7 @@
 
 .app__title {
   font-size: 1.4rem;
+  min-width: 0;
 }
 
 .card {

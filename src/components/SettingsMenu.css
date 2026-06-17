@@ -1,12 +1,15 @@
+.app__header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .settings-gear {
-  position: fixed;
-  top: 0.85rem;
-  right: 0.85rem;
-  z-index: 50;
   background: none;
   border: none;
   padding: 0.35rem;
   line-height: 0;
+  flex-shrink: 0;
   color: var(--color-text-muted);
   opacity: 0.55;
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -15,18 +18,6 @@
 .settings-gear:active {
   opacity: 1;
   transform: rotate(30deg);
-}
-
-/* Glisse vers le haut et disparaît pendant qu'on défile dans la page. */
-.settings-gear--hidden {
-  opacity: 0;
-  transform: translateY(-150%);
-  pointer-events: none;
-}
-
-/* Évite que la pastille de progression passe sous l'engrenage. */
-.app__header {
-  padding-right: 2.4rem;
 }
 
 .settings-overlay {

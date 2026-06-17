@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Semicircle } from '../components/Semicircle'
+import { AppHeader } from '../components/SettingsMenu'
 import { useSmoothAngle } from '../hooks/useSmoothAngle'
 import {
   setLiveAngle,
@@ -92,10 +93,10 @@ function GuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
     if (!entry) return null
     return (
       <div className="app">
-        <header className="app__header">
+        <AppHeader>
           <h1 className="app__title">Résultat</h1>
           <span className="progress-pill">{progress}</span>
-        </header>
+        </AppHeader>
 
         <div className="card">
           <p className="text-muted">
@@ -127,10 +128,10 @@ function GuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
   if (isGuesser) {
     return (
       <div className="app">
-        <header className="app__header">
+        <AppHeader>
           <h1 className="app__title">À toi de deviner !</h1>
           <span className="progress-pill">{progress}</span>
-        </header>
+        </AppHeader>
 
         <div className="card">
           <p className="text-muted">Indice de {sourceName} :</p>
@@ -148,12 +149,12 @@ function GuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
   // Spectateur (dont l'auteur de l'indice) : on suit l'aiguille en direct.
   return (
     <div className="app">
-      <header className="app__header">
+      <AppHeader>
         <h1 className="app__title">
           {isSource ? `${guesserName} devine ton indice` : `Au tour de ${guesserName}`}
         </h1>
         <span className="progress-pill">{progress}</span>
-      </header>
+      </AppHeader>
 
       <div className="card">
         <p className="text-muted">Indice de {sourceName} :</p>
@@ -229,10 +230,10 @@ function ConsensusGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
     if (!entry) return null
     return (
       <div className="app">
-        <header className="app__header">
+        <AppHeader>
           <h1 className="app__title">Résultat</h1>
           <span className="progress-pill">{progress}</span>
-        </header>
+        </AppHeader>
 
         <div className="card">
           <p className="text-muted">Indice de {sourceName} :</p>
@@ -256,10 +257,10 @@ function ConsensusGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
   if (isSource) {
     return (
       <div className="app">
-        <header className="app__header">
+        <AppHeader>
           <h1 className="app__title">Les autres devinent ton indice</h1>
           <span className="progress-pill">{progress}</span>
-        </header>
+        </AppHeader>
 
         <div className="card">
           <p className="text-muted">Ton indice :</p>
@@ -373,10 +374,10 @@ function ConsensusGuesser({
 
   return (
     <div className="app">
-      <header className="app__header">
+      <AppHeader>
         <h1 className="app__title">Mettez-vous d&apos;accord !</h1>
         <span className="progress-pill">{progress}</span>
-      </header>
+      </AppHeader>
 
       <div className="card">
         <p className="text-muted">Indice de {sourceName} :</p>
