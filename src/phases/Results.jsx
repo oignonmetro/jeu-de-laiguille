@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Semicircle } from '../components/Semicircle'
+import { AppHeader } from '../components/SettingsMenu'
 import { ScoreGauge } from '../components/ScoreGauge'
 import { getGaugeVerdict } from '../components/gaugeZones'
 import { Confetti } from '../components/Confetti'
@@ -99,10 +100,10 @@ export function Results({ roomCode, room, playerId }) {
 
     return (
       <div className="app">
-        <header className="app__header">
+        <AppHeader>
           <h1 className="app__title">Résultats</h1>
           <span className="progress-pill">{progress}</span>
-        </header>
+        </AppHeader>
 
         <div className="card text-center">
           <h2>Score de l&apos;équipe</h2>
@@ -157,9 +158,9 @@ export function Results({ roomCode, room, playerId }) {
 
   return (
     <div className="app">
-      <header className="app__header">
+      <AppHeader>
         <h1 className="app__title">Résultats</h1>
-      </header>
+      </AppHeader>
 
       <div className="card text-center">
         <h2>Score de l&apos;équipe</h2>
@@ -228,9 +229,9 @@ function Finale({ score, maxScore, onDone, isHost, onPlayAgain, busy }) {
 
   return (
     <div className="app">
-      <header className="app__header">
+      <AppHeader>
         <h1 className="app__title">Score final</h1>
-      </header>
+      </AppHeader>
 
       <div className="card text-center finale">
         <h2>Score de l&apos;équipe</h2>

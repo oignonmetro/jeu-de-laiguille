@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Semicircle } from '../components/Semicircle'
+import { AppHeader } from '../components/SettingsMenu'
 import { submitClue, setRoundReady, tryAdvanceToGuessing, rerollSpectrum } from '../game/roomApi'
 import { MAX_REROLLS } from '../game/logic'
 
@@ -16,9 +17,9 @@ export function ClueWriting({ roomCode, room, playerId }) {
     const readyCount = room.order.filter((id) => room.rounds[id].every((r) => r.ready)).length
     return (
       <div className="app">
-        <header className="app__header">
+        <AppHeader>
           <h1 className="app__title">Indices envoyés !</h1>
-        </header>
+        </AppHeader>
         <div className="card">
           <p className="text-muted">
             En attente des autres joueurs ({readyCount}/{room.order.length})...
@@ -69,12 +70,12 @@ export function ClueWriting({ roomCode, room, playerId }) {
 
   return (
     <div className="app">
-      <header className="app__header">
+      <AppHeader>
         <h1 className="app__title">Écris ton indice</h1>
         <span className="progress-pill">
           {index + 1} / {myRounds.length}
         </span>
-      </header>
+      </AppHeader>
 
       <div className="card">
         <Semicircle spectrum={spectrum} mode="display" targetAngle={round.needleAngle} />
