@@ -143,7 +143,16 @@ export function Results({ roomCode, room, playerId }) {
   }
 
   if (phase === 'finale') {
-    return <Finale score={room.score} maxScore={maxScore} onDone={() => setPhase('recap')} />
+    return (
+      <Finale
+        score={room.score}
+        maxScore={maxScore}
+        onDone={() => setPhase('recap')}
+        isHost={isHost}
+        onPlayAgain={handlePlayAgain}
+        busy={busy}
+      />
+    )
   }
 
   return (
@@ -202,7 +211,7 @@ export function Results({ roomCode, room, playerId }) {
 // Écran de score final : la jauge re-balaie lentement depuis zéro pendant
 // que le compteur monte, puis le verdict apparaît en grand (avec confettis
 // si l'équipe a brillé).
-function Finale({ score, maxScore, onDone }) {
+function Finale({ score, maxScore, onDone, isHost, onPlayAgain, busy }) {
   const [showVerdict, setShowVerdict] = useState(false)
   const countedScore = useCountUp(score, FINALE_SWEEP_MS)
   const verdict = getGaugeVerdict(score, maxScore)
@@ -240,6 +249,13 @@ function Finale({ score, maxScore, onDone }) {
       <button className="btn" onClick={onDone}>
         Voir le détail
       </button>
+      {isHost ? (
+        <button className="btn btn--ghost" onClick={onPlayAgain} disabled={busy}>
+          Nouvelle partie
+        </button>
+      ) : (
+        <p className="text-muted">En attente que l&apos;hôte relance une partie…</p>
+      )}
     </div>
   )
 }
