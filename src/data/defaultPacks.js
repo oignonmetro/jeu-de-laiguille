@@ -70,6 +70,7 @@ export const DEFAULT_PACKS = [
       { left: 'Amitié féminine', right: 'Amitié masculine' },
       { left: 'À ne pas pécho', right: 'À pécho' },
       { left: '-1000 aura', right: '+1000 aura' },
+      { left: 'Cringe', right: 'Charismatique' },
     ],
   },
   {
