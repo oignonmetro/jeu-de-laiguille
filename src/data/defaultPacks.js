@@ -50,7 +50,6 @@ export const DEFAULT_PACKS = [
     spectra: [
       { left: 'Comestible', right: 'Immangeable' },
       { left: 'Adapté à un mariage', right: 'Inadapté à un mariage' },
-      { left: 'Ferait un robot', right: 'Ferait un humain' },
       { left: 'Recommandé au travail', right: 'Inacceptable au travail' },
       { left: 'Digne d\'un super-héros', right: 'Digne d\'un vilain' },
       { left: 'Bruyant', right: 'Silencieux' },
@@ -70,6 +69,7 @@ export const DEFAULT_PACKS = [
       { left: 'Bon sextoy', right: 'Mauvais sextoy' },
       { left: 'Amitié féminine', right: 'Amitié masculine' },
       { left: 'À ne pas pécho', right: 'À pécho' },
+      { left: '-1000 aura', right: '+1000 aura' },
     ],
   },
   {
