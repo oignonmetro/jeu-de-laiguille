@@ -50,7 +50,6 @@ export const DEFAULT_PACKS = [
     spectra: [
       { left: 'Comestible', right: 'Immangeable' },
       { left: 'Adapté à un mariage', right: 'Inadapté à un mariage' },
-      { left: 'Ferait un robot', right: 'Ferait un humain' },
       { left: 'Recommandé au travail', right: 'Inacceptable au travail' },
       { left: 'Digne d\'un super-héros', right: 'Digne d\'un vilain' },
       { left: 'Bruyant', right: 'Silencieux' },
