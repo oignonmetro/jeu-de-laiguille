@@ -44,6 +44,15 @@
   gap: 1rem;
 }
 
+/* Bloc d'actions de partie (hôte) séparé des réglages par un filet. */
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-surface-alt);
+}
+
 .settings-row__hint {
   display: block;
   font-size: 0.8rem;

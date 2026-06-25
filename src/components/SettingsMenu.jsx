@@ -1,18 +1,43 @@
-import { useState } from 'react'
+import { createContext, useContext, useState } from 'react'
 import { isHapticsEnabled, setHapticsEnabled } from '../utils/haptics'
 import './SettingsMenu.css'
+
+// Actions de partie réservées à l'hôte, exposées au menu Paramètres (présent
+// dans l'en-tête de chaque écran) sans avoir à passer de props à travers tous
+// les AppHeader. Vaut null hors d'une partie (accueil, gestion des packs).
+const GameControlContext = createContext(null)
+
+export function GameControlProvider({ value, children }) {
+  return <GameControlContext.Provider value={value}>{children}</GameControlContext.Provider>
+}
 
 // En-tête de page intégrant l'engrenage de paramètres au même niveau que le
 // titre : le bouton fait partie du flux normal et défile avec le contenu.
 export function AppHeader({ children }) {
   const [open, setOpen] = useState(false)
   const [haptics, setHaptics] = useState(isHapticsEnabled)
+  const [busy, setBusy] = useState(false)
+  const gameControl = useContext(GameControlContext)
 
   const toggleHaptics = () => {
     const next = !haptics
     setHaptics(next)
     setHapticsEnabled(next)
     if (next) navigator.vibrate?.(50)
+  }
+
+  // Recommence la partie en cours : tout le monde repart du salon, score
+  // remis à zéro. Confirmation car l'action affecte tous les joueurs.
+  const handleRestart = async () => {
+    if (!window.confirm('Recommencer la partie ? Tout le monde reviendra au salon et le score sera remis à zéro.')) {
+      return
+    }
+    setBusy(true)
+    try {
+      await gameControl.onRestart()
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -59,6 +84,17 @@ export function AppHeader({ children }) {
                 <span className="switch__slider" aria-hidden="true" />
               </span>
             </label>
+
+            {gameControl?.canRestart && (
+              <div className="settings-section">
+                <button className="btn btn--danger" onClick={handleRestart} disabled={busy}>
+                  Recommencer la partie
+                </button>
+                <p className="settings-row__hint">
+                  Ramène tout le monde au salon et remet le score à zéro.
+                </p>
+              </div>
+            )}
 
             <button className="btn btn--secondary" onClick={() => setOpen(false)}>
               Fermer

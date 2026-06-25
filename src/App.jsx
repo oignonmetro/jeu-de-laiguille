@@ -5,8 +5,9 @@ import { Lobby } from './phases/Lobby'
 import { ClueWriting } from './phases/ClueWriting'
 import { Guessing } from './phases/Guessing'
 import { Results } from './phases/Results'
+import { GameControlProvider } from './components/SettingsMenu'
 import { useRoom } from './hooks/useRoom'
-import { leaveRoom, cleanupIfInactive } from './game/roomApi'
+import { leaveRoom, cleanupIfInactive, playAgain } from './game/roomApi'
 import { getOrCreatePlayerId } from './game/playerId'
 import { firebaseConfigured } from './firebase'
 import './App.css'
@@ -123,10 +124,17 @@ function App() {
     setRoomCode('')
   }
 
+  // Action de partie réservée à l'hôte, exposée au menu Paramètres : recommencer
+  // une partie déjà lancée (sans objet dans le salon, où rien n'a encore démarré).
+  const gameControl = {
+    canRestart: room.hostId === playerId && room.status !== 'lobby',
+    onRestart: () => playAgain(roomCode),
+  }
+
   // Pied de page discret : rappel du code de la salle (utile pour un joueur
   // déconnecté ; le lobby l'affiche déjà en grand) et bouton pour quitter.
   return (
-    <>
+    <GameControlProvider value={gameControl}>
       {screen}
       <footer className="room-footer">
         {room.status !== 'lobby' && (
@@ -138,7 +146,7 @@ function App() {
           Quitter la salle
         </button>
       </footer>
-    </>
+    </GameControlProvider>
   )
 }
 
