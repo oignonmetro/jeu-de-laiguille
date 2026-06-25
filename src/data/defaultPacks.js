@@ -122,7 +122,6 @@ export const DEFAULT_PACKS = [
       { left: 'Platon', right: 'Aristote' },
       { left: 'Descartes', right: 'Hume' },
       { left: 'Sartre', right: 'Camus' },
-      { left: 'Camus', right: 'Sartre' },
       { left: 'Woke de son époque', right: 'Problématique' },
       { left: 'Lisible', right: 'Illisible' },
       { left: 'Énorme fou du bus', right: 'Normie' },
