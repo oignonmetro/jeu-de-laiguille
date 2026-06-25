@@ -69,6 +69,8 @@ export const DEFAULT_PACKS = [
       { left: 'Bon sextoy', right: 'Mauvais sextoy' },
       { left: 'Amitié féminine', right: 'Amitié masculine' },
       { left: 'À ne pas pécho', right: 'À pécho' },
+      { left: '-1000 aura', right: '+1000 aura' },
+      { left: 'Cringe', right: 'Charismatique' },
     ],
   },
   {
@@ -120,6 +122,7 @@ export const DEFAULT_PACKS = [
       { left: 'Platon', right: 'Aristote' },
       { left: 'Descartes', right: 'Hume' },
       { left: 'Sartre', right: 'Camus' },
+      { left: 'Camus', right: 'Sartre' },
       { left: 'Woke de son époque', right: 'Problématique' },
       { left: 'Lisible', right: 'Illisible' },
       { left: 'Énorme fou du bus', right: 'Normie' },
