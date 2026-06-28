@@ -112,8 +112,8 @@ export function Lobby({ roomCode, room, playerId }) {
                   onClick={() => handleSetGuessMode('solo')}
                   disabled={busy}
                 >
-                  Solo
-                  <span className="text-muted"> · un joueur devine à chaque tour</span>
+                  Chacun pour soi
+                  <span className="text-muted"> · chacun devine, l&apos;auteur gagne les points de tous</span>
                 </button>
               </li>
               <li>
@@ -131,7 +131,7 @@ export function Lobby({ roomCode, room, playerId }) {
             <p className="text-muted">
               {guessMode === 'consensus'
                 ? "Consensus · tout le monde doit se mettre d'accord sur la position de l'aiguille"
-                : 'Solo · un joueur devine à chaque tour'}
+                : "Chacun pour soi · chacun devine de son côté, l'auteur gagne les points de tous"}
             </p>
           )}
         </div>

@@ -345,3 +345,62 @@ textarea:focus {
   border-top: none;
   padding-top: 0;
 }
+
+/* Ligne de score (mode « Chacun pour soi ») : nom à gauche, points à droite. */
+.score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.score-row__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.score-row--author {
+  font-weight: 700;
+  border-top: 1px solid var(--color-surface);
+  margin-top: 0.1rem;
+  padding-top: 0.5rem;
+}
+
+.score-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Lignes du classement final. */
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.rank-row__pos {
+  width: 1.8rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+.rank-row__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-row__score {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.rank-row--me {
+  color: var(--color-primary);
+}
