@@ -4,8 +4,7 @@ import { generateRoomCode } from './codes'
 import { AppError } from './errors'
 import {
   assignRounds,
-  buildConsensusTurns,
-  buildTurns,
+  buildClueTurns,
   computeScore,
   mergeSpectra,
   pickDifferentSpectrum,
@@ -132,8 +131,9 @@ export async function removePack(roomCode, packId) {
 }
 
 // Choisit le mode de devinette pour les parties à 3 joueurs ou plus :
-// 'solo' (un joueur devine à chaque tour) ou 'consensus' (tous les joueurs
-// sauf l'auteur de l'indice doivent se mettre d'accord).
+// 'solo' (« Chacun pour soi » : chacun devine de son côté, l'auteur récupère
+// les points de tous) ou 'consensus' (tous les joueurs sauf l'auteur de
+// l'indice doivent se mettre d'accord).
 export async function setGuessMode(roomCode, mode) {
   await update(ref(db, `rooms/${roomCode}`), {
     guessMode: mode,
@@ -194,16 +194,7 @@ export async function rerollSpectrum(roomCode, playerId, roundIndex, spectraCoun
   })
 }
 
-// Position de l'aiguille du devineur, diffusée en direct aux autres joueurs
-// pendant qu'il hésite. Écriture légère, throttlée côté client.
-export async function setLiveAngle(roomCode, angle) {
-  await update(ref(db, `rooms/${roomCode}`), {
-    liveAngle: angle,
-    lastActivityAt: Date.now(),
-  })
-}
-
-// Mode "Consensus" : position proposée, diffusée en direct comme setLiveAngle.
+// Mode "Consensus" : position de l'aiguille partagée, diffusée en direct.
 // Tout déplacement remet à zéro les accords déjà donnés, puisqu'ils portaient
 // sur l'ancienne position.
 export async function setConsensusAngle(roomCode, angle) {
@@ -260,42 +251,61 @@ export async function tryAdvanceToGuessing(roomCode) {
     )
     if (!allReady) return room
     room.status = 'guessing'
-    room.turns = room.guessMode === 'consensus' ? buildConsensusTurns(room.order) : buildTurns(room.order)
+    room.turns = buildClueTurns(room.order)
     room.currentTurn = 0
     room.turnPhase = 'guessing'
     room.liveAngle = 90
     room.consensusAgreements = null
+    room.guesses = null
+    // Scores individuels (mode « Chacun pour soi »), un par joueur.
+    room.scores = Object.fromEntries(room.order.map((id) => [id, 0]))
     room.lastActivityAt = Date.now()
     return room
   })
 }
 
-// Valide la réponse du devineur pour le tour courant : calcule le score,
-// l'ajoute au score commun de l'équipe et passe le tour en phase "reveal"
-// (tout le monde voit la position réelle et les points gagnés).
-export async function submitTurnGuess(roomCode, turnIndex, guessedAngle) {
+// Mode « Chacun pour soi » : enregistre l'aiguille d'un devineur pour le tour
+// courant. Dès que tous les joueurs (sauf l'auteur de l'indice) ont répondu,
+// on calcule les points — chaque devineur marque les siens, l'auteur récupère
+// la somme — puis on passe le tour en "reveal". Transaction pour qu'un seul
+// calcul ait lieu même si les dernières réponses arrivent en même temps.
+export async function submitIndividualGuess(roomCode, turnIndex, playerId, guessedAngle) {
   const roomRef = ref(db, `rooms/${roomCode}`)
   await runTransaction(roomRef, (room) => {
     if (!room || room.status !== 'guessing') return room
     if (room.turnPhase !== 'guessing' || room.currentTurn !== turnIndex) return room
-
     const turn = room.turns[turnIndex]
-    const round = room.rounds[turn.sourceId][turn.roundIndex]
-    const score = computeScore(round.needleAngle, guessedAngle)
+    if (playerId === turn.sourceId) return room // l'auteur ne devine pas son indice
+    if (room.guesses?.[playerId] != null) return room // déjà répondu
 
-    if (!room.results) room.results = {}
-    if (!room.results[turn.guesserId]) room.results[turn.guesserId] = []
-    room.results[turn.guesserId][turn.roundIndex] = {
-      sourceId: turn.sourceId,
-      spectrumIndex: round.spectrumIndex,
-      clue: round.clue,
-      actualAngle: round.needleAngle,
-      guessedAngle,
-      score,
+    if (!room.guesses) room.guesses = {}
+    room.guesses[playerId] = guessedAngle
+
+    const guessers = room.order.filter((id) => id !== turn.sourceId)
+    if (guessers.every((id) => room.guesses[id] != null)) {
+      const round = room.rounds[turn.sourceId][turn.roundIndex]
+      if (!room.scores) room.scores = {}
+      if (!room.results) room.results = {}
+      if (!room.results[turn.sourceId]) room.results[turn.sourceId] = []
+      const guessEntries = {}
+      let authorScore = 0
+      guessers.forEach((id) => {
+        const score = computeScore(round.needleAngle, room.guesses[id])
+        guessEntries[id] = { guessedAngle: room.guesses[id], score }
+        room.scores[id] = (room.scores[id] || 0) + score
+        authorScore += score
+      })
+      room.scores[turn.sourceId] = (room.scores[turn.sourceId] || 0) + authorScore
+      room.results[turn.sourceId][turn.roundIndex] = {
+        spectrumIndex: round.spectrumIndex,
+        clue: round.clue,
+        actualAngle: round.needleAngle,
+        authorScore,
+        guesses: guessEntries,
+      }
+      room.guesses = null
+      room.turnPhase = 'reveal'
     }
-    room.score = (room.score || 0) + score
-    room.liveAngle = guessedAngle
-    room.turnPhase = 'reveal'
     room.lastActivityAt = Date.now()
     return room
   })
@@ -318,6 +328,7 @@ export async function advanceTurn(roomCode, turnIndex) {
       room.liveAngle = 90
     }
     room.consensusAgreements = null
+    room.guesses = null
     room.lastActivityAt = Date.now()
     return room
   })
@@ -334,7 +345,9 @@ export async function playAgain(roomCode) {
     turnPhase: null,
     liveAngle: null,
     consensusAgreements: null,
+    guesses: null,
     score: 0,
+    scores: null,
     lastActivityAt: Date.now(),
   })
 }
