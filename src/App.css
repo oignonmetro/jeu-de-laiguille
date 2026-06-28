@@ -3,7 +3,10 @@
   width: 100%;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 1.25rem 1.25rem 2.5rem;
+  /* Marges respectant les zones sûres iOS (barre d'état/encoche, indicateur
+     d'accueil) quand l'app est lancée en plein écran depuis l'écran d'accueil. */
+  padding: calc(1.25rem + env(safe-area-inset-top)) calc(1.25rem + env(safe-area-inset-right))
+    calc(2.5rem + env(safe-area-inset-bottom)) calc(1.25rem + env(safe-area-inset-left));
   display: flex;
   flex-direction: column;
   gap: 1rem;

@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Icônes PNG générées au build à partir de public/icon.svg (cf. scripts/generate-icons.mjs)
+public/apple-touch-icon.png
+public/icon-192.png
+public/icon-512.png
+
 # Environment variables
 .env
 .env.*
