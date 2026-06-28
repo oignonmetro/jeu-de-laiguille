@@ -5,7 +5,7 @@ import { ScoreGauge } from '../components/ScoreGauge'
 import { getGaugeVerdict } from '../components/gaugeZones'
 import { Confetti } from '../components/Confetti'
 import { useCountUp } from '../hooks/useCountUp'
-import { getGuessSourceId } from '../game/logic'
+import { playerColor } from '../game/colors'
 import { playAgain } from '../game/roomApi'
 import { vibrate } from '../utils/haptics'
 
@@ -22,6 +22,15 @@ const FINALE_SWEEP_MS = 2400
 const CELEBRATION_RATIO = 2 / 3
 
 export function Results({ roomCode, room, playerId }) {
+  if (room.guessMode !== 'consensus') {
+    return <IndividualResults roomCode={roomCode} room={room} playerId={playerId} />
+  }
+  return <CooperativeResults roomCode={roomCode} room={room} playerId={playerId} />
+}
+
+// Mode "Consensus" : score d'équipe coopératif, cinématique de révélation tour
+// par tour puis jauge finale.
+function CooperativeResults({ roomCode, room, playerId }) {
   const [busy, setBusy] = useState(false)
   // phase 'turns' : manches révélées une à une ; 'finale' : score total
   // dramatisé ; 'recap' : récapitulatif détaillé complet.
@@ -171,8 +180,8 @@ export function Results({ roomCode, room, playerId }) {
       </div>
 
       {room.order.map((id) => {
-        const sourceId = isConsensus ? id : getGuessSourceId(room.order, id)
-        const guesserLabel = isConsensus ? 'Tout le monde' : room.players[id].name
+        const sourceId = id
+        const guesserLabel = 'Tout le monde'
         const entries = room.results[id]
         return (
           <div className="card" key={id}>
@@ -256,6 +265,116 @@ function Finale({ score, maxScore, onDone, isHost, onPlayAgain, busy }) {
         </button>
       ) : (
         <p className="text-muted">En attente que l&apos;hôte relance une partie…</p>
+      )}
+    </div>
+  )
+}
+
+// Mode « Chacun pour soi » : classement individuel puis récap de chaque indice
+// (position réelle, aiguilles des devineurs et points). Pas de cinématique.
+function IndividualResults({ roomCode, room, playerId }) {
+  const [busy, setBusy] = useState(false)
+  const isHost = room.hostId === playerId
+
+  // Classement décroissant, avec rangs partagés en cas d'égalité.
+  const sorted = room.order
+    .map((id) => ({ id, name: room.players[id].name, score: room.scores?.[id] ?? 0 }))
+    .sort((a, b) => b.score - a.score)
+  const ranked = sorted.reduce((acc, entry, i) => {
+    const prev = acc[i - 1]
+    const rank = prev && entry.score === prev.score ? prev.rank : i + 1
+    acc.push({ ...entry, rank })
+    return acc
+  }, [])
+  const medals = { 1: '🥇', 2: '🥈', 3: '🥉' }
+
+  const handlePlayAgain = async () => {
+    setBusy(true)
+    try {
+      await playAgain(roomCode)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="app">
+      <AppHeader>
+        <h1 className="app__title">Classement</h1>
+      </AppHeader>
+
+      <div className="card">
+        <ul className="player-list">
+          {ranked.map((entry) => (
+            <li key={entry.id} className={`rank-row${entry.id === playerId ? ' rank-row--me' : ''}`}>
+              <span className="rank-row__pos">{medals[entry.rank] || `${entry.rank}.`}</span>
+              <span className="rank-row__name">
+                {entry.name}
+                {entry.id === playerId ? ' (toi)' : ''}
+              </span>
+              <span className="rank-row__score">{entry.score} pts</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {room.order.map((authorId) => {
+        const entries = room.results?.[authorId] || []
+        const guessers = room.order.filter((id) => id !== authorId)
+        return (
+          <div className="card" key={authorId}>
+            <h2>Indices de {room.players[authorId].name}</h2>
+            {entries.map((entry, i) => {
+              if (!entry) return null
+              const spectrum = room.pack.spectra[entry.spectrumIndex]
+              const needles = guessers
+                .filter((id) => entry.guesses?.[id])
+                .map((id) => ({
+                  angle: entry.guesses[id].guessedAngle,
+                  color: playerColor(room.order, id),
+                }))
+              return (
+                <div className="result-round" key={i}>
+                  <p className="clue-text">« {entry.clue} »</p>
+                  <Semicircle
+                    spectrum={spectrum}
+                    mode="result"
+                    targetAngle={entry.actualAngle}
+                    needles={needles}
+                  />
+                  <ul className="player-list">
+                    {guessers.map((id) => (
+                      <li key={id} className="score-row">
+                        <span className="score-row__name">
+                          <span
+                            className="score-dot"
+                            style={{ background: playerColor(room.order, id) }}
+                          />
+                          {room.players[id].name}
+                        </span>
+                        <span>+{entry.guesses?.[id]?.score ?? 0}</span>
+                      </li>
+                    ))}
+                    <li className="score-row score-row--author">
+                      <span className="score-row__name">
+                        {room.players[authorId].name} · indice
+                      </span>
+                      <span>+{entry.authorScore}</span>
+                    </li>
+                  </ul>
+                </div>
+              )
+            })}
+          </div>
+        )
+      })}
+
+      {isHost ? (
+        <button className="btn" onClick={handlePlayAgain} disabled={busy}>
+          Nouvelle partie
+        </button>
+      ) : (
+        <p className="text-muted">En attente que l&apos;hôte relance une partie...</p>
       )}
     </div>
   )
