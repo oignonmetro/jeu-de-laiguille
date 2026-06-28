@@ -16,7 +16,7 @@ import {
 // Une salle sans aucune action de jeu (cf. lastActivityAt, mis à jour par
 // toutes les fonctions ci-dessous qui font progresser la partie) pendant ce
 // délai est considérée abandonnée et peut être supprimée.
-const ROOM_INACTIVITY_MS = 15 * 60 * 1000
+const ROOM_INACTIVITY_MS = 30 * 60 * 1000
 
 export async function createRoom(playerId, playerName) {
   for (let attempt = 0; attempt < 5; attempt++) {
