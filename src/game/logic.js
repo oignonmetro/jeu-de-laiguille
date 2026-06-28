@@ -101,34 +101,12 @@ export function pickDifferentSpectrum(spectraCount, currentIndex, excluded = [])
   return candidates[Math.floor(Math.random() * candidates.length)]
 }
 
-// Le joueur `playerId` devine les indices écrits par le joueur précédent dans l'ordre.
-export function getGuessSourceId(order, playerId) {
-  const n = order.length
-  const idx = order.indexOf(playerId)
-  return order[(idx - 1 + n) % n]
-}
-
-// Construit la liste des tours de devinette, joués un par un devant tout le
-// monde : manche 0 de chaque joueur (A devine B, B devine C, ...), puis
-// manche 1, puis manche 2.
-export function buildTurns(order) {
-  const turns = []
-  for (let roundIndex = 0; roundIndex < ROUNDS_PER_PLAYER; roundIndex++) {
-    order.forEach((guesserId) => {
-      turns.push({
-        guesserId,
-        sourceId: getGuessSourceId(order, guesserId),
-        roundIndex,
-      })
-    })
-  }
-  return turns
-}
-
-// Mode "Consensus" : un tour par indice écrit (3 par joueur). Pas de
-// devineur unique désigné — tous les joueurs sauf l'auteur de l'indice
-// doivent se mettre d'accord sur une position avant validation.
-export function buildConsensusTurns(order) {
+// Construit la liste des tours, un par indice écrit (3 par joueur), joués un
+// par un devant tout le monde : manche 0 de chaque joueur (dans l'ordre), puis
+// manche 1, puis manche 2. Chaque tour est identifié par l'auteur de l'indice
+// (sourceId) et l'index de sa manche ; les joueurs qui devinent (tous sauf
+// l'auteur) sont déterminés au moment du tour, quel que soit le mode.
+export function buildClueTurns(order) {
   const turns = []
   for (let roundIndex = 0; roundIndex < ROUNDS_PER_PLAYER; roundIndex++) {
     order.forEach((sourceId) => {

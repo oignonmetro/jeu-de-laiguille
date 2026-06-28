@@ -28,6 +28,9 @@ export function Semicircle({
   onChange,
   targetAngle,
   score,
+  // Plusieurs aiguilles colorées (mode « Chacun pour soi » : une par devineur).
+  // Quand fourni, remplace l'aiguille unique.
+  needles,
 }) {
   const svgRef = useRef(null)
   const draggingRef = useRef(false)
@@ -117,9 +120,24 @@ export function Semicircle({
 
         <line x1="8" y1="100" x2="192" y2="100" className="semicircle__base" />
 
-        {showNeedle && (
-          <line x1={CX} y1={CY} x2={needle.x} y2={needle.y} className="semicircle__needle" />
-        )}
+        {needles && needles.length > 0
+          ? needles.map((n, i) => {
+              const tip = pointOnArc(CX, CY, NEEDLE_LENGTH, n.angle)
+              return (
+                <line
+                  key={i}
+                  x1={CX}
+                  y1={CY}
+                  x2={tip.x}
+                  y2={tip.y}
+                  className="semicircle__needle"
+                  style={n.color ? { stroke: n.color } : undefined}
+                />
+              )
+            })
+          : showNeedle && (
+              <line x1={CX} y1={CY} x2={needle.x} y2={needle.y} className="semicircle__needle" />
+            )}
         <circle cx={CX} cy={CY} r="13" className="semicircle__pivot" />
       </svg>
 
