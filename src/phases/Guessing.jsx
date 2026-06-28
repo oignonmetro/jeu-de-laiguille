@@ -3,6 +3,7 @@ import { Semicircle } from '../components/Semicircle'
 import { AppHeader } from '../components/SettingsMenu'
 import { useSmoothAngle } from '../hooks/useSmoothAngle'
 import { playerColor } from '../game/colors'
+import { effectiveGuessMode } from '../game/logic'
 import {
   submitIndividualGuess,
   advanceTurn,
@@ -18,7 +19,8 @@ export function Guessing({ roomCode, room, playerId }) {
   const turn = room.turns?.[turnIndex]
   if (!turn) return null
 
-  const Turn = room.guessMode === 'consensus' ? ConsensusGuessingTurn : IndividualGuessingTurn
+  const Turn =
+    effectiveGuessMode(room) === 'individual' ? IndividualGuessingTurn : ConsensusGuessingTurn
 
   // key={turnIndex} : remet l'état local (angle, etc.) à zéro à chaque tour.
   return (
