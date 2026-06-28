@@ -6,6 +6,7 @@ import { getGaugeVerdict } from '../components/gaugeZones'
 import { Confetti } from '../components/Confetti'
 import { useCountUp } from '../hooks/useCountUp'
 import { playerColor } from '../game/colors'
+import { effectiveGuessMode } from '../game/logic'
 import { playAgain } from '../game/roomApi'
 import { vibrate } from '../utils/haptics'
 
@@ -22,7 +23,7 @@ const FINALE_SWEEP_MS = 2400
 const CELEBRATION_RATIO = 2 / 3
 
 export function Results({ roomCode, room, playerId }) {
-  if (room.guessMode !== 'consensus') {
+  if (effectiveGuessMode(room) === 'individual') {
     return <IndividualResults roomCode={roomCode} room={room} playerId={playerId} />
   }
   return <CooperativeResults roomCode={roomCode} room={room} playerId={playerId} />
@@ -40,18 +41,15 @@ function CooperativeResults({ roomCode, room, playerId }) {
   const isHost = room.hostId === playerId
   const maxScore = room.turns.length * 4
 
-  const isConsensus = room.guessMode === 'consensus'
-
   // Score cumulé après chaque tour, dans l'ordre de révélation de la cinématique.
   const cumulativeScores = useMemo(() => {
     const scores = [0]
     room.turns.forEach((turn) => {
-      const resultsId = isConsensus ? turn.sourceId : turn.guesserId
-      const score = room.results[resultsId][turn.roundIndex].score
+      const score = room.results[turn.sourceId][turn.roundIndex].score
       scores.push(scores[scores.length - 1] + score)
     })
     return scores
-  }, [room.turns, room.results, isConsensus])
+  }, [room.turns, room.results])
 
   const revealed = stage === 'gauge'
   const displayedScore = cumulativeScores[turnIndex + (revealed ? 1 : 0)]
@@ -99,11 +97,10 @@ function CooperativeResults({ roomCode, room, playerId }) {
 
   if (phase === 'turns' && room.turns.length > 0) {
     const turn = room.turns[turnIndex]
-    const resultsId = isConsensus ? turn.sourceId : turn.guesserId
-    const entry = room.results[resultsId][turn.roundIndex]
+    const entry = room.results[turn.sourceId][turn.roundIndex]
     const spectrum = room.pack.spectra[entry.spectrumIndex]
     const sourceName = room.players[turn.sourceId].name
-    const guesserName = isConsensus ? 'Tout le monde' : room.players[turn.guesserId].name
+    const guesserName = 'Tout le monde'
     const progress = `Manche ${turnIndex + 1} / ${room.turns.length}`
     const pulse = revealed && entry.score === 4
 
