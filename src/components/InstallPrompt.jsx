@@ -29,14 +29,22 @@ export function InstallPrompt() {
   const [dismissed, setDismissed] = useState(() => localStorage.getItem(DISMISS_KEY) === '1')
   // Évènement beforeinstallprompt mis de côté pour le déclencher au clic (Android/Chrome).
   const [deferred, setDeferred] = useState(null)
+  // Passe à true dès que l'app est installée pendant la session (évènement
+  // appinstalled), pour masquer la bannière sans attendre un relancement.
+  const [installed, setInstalled] = useState(false)
 
   useEffect(() => {
     const onPrompt = (e) => {
       e.preventDefault()
       setDeferred(e)
     }
+    const onInstalled = () => setInstalled(true)
     window.addEventListener('beforeinstallprompt', onPrompt)
-    return () => window.removeEventListener('beforeinstallprompt', onPrompt)
+    window.addEventListener('appinstalled', onInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onPrompt)
+      window.removeEventListener('appinstalled', onInstalled)
+    }
   }, [])
 
   const close = () => {
@@ -44,7 +52,7 @@ export function InstallPrompt() {
     localStorage.setItem(DISMISS_KEY, '1')
   }
 
-  if (dismissed || isStandalone()) return null
+  if (dismissed || installed || isStandalone()) return null
 
   // Android / Chrome : invite native déclenchable par un bouton.
   if (deferred) {
