@@ -115,3 +115,12 @@ export function buildClueTurns(order) {
   }
   return turns
 }
+
+// Mode de jeu effectivement appliqué. Le mode « Chacun pour soi » (scores
+// individuels) n'est disponible qu'à partir de 3 joueurs ; en dessous, la
+// partie se joue toujours en coopératif (Consensus), où l'unique autre joueur
+// devine. Renvoie 'individual' ou 'consensus'.
+export function effectiveGuessMode(room) {
+  if ((room.order?.length ?? 0) < 3) return 'consensus'
+  return room.guessMode === 'consensus' ? 'consensus' : 'individual'
+}
