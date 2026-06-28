@@ -1,0 +1,45 @@
+.install-hint {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius);
+  padding: 0.9rem 2.4rem 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.install-hint__title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.install-hint__steps {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.install-hint__share {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.install-hint .btn--small {
+  align-self: flex-start;
+}
+
+.install-hint__close {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  padding: 0.2rem 0.4rem;
+  line-height: 1;
+  font-size: 1.4rem;
+  color: var(--color-text-muted);
+}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createRoom, joinRoom } from '../game/roomApi'
 import { userMessage } from '../game/errors'
 import { AppHeader } from '../components/SettingsMenu'
+import { InstallPrompt } from '../components/InstallPrompt'
 
 const NAME_STORAGE_KEY = 'demi-cercle:player-name'
 
@@ -60,6 +61,8 @@ export function Home({ playerId, onEnterRoom, onOpenPacks, notice }) {
       <AppHeader>
         <h1 className="app__title">Le jeu de l'aiguille</h1>
       </AppHeader>
+
+      <InstallPrompt />
 
       {notice && (
         <div className="card">
