@@ -257,10 +257,22 @@ export async function tryAdvanceToGuessing(roomCode) {
     room.liveAngle = 90
     room.consensusAgreements = null
     room.guesses = null
+    room.liveAngles = null
     // Scores individuels (mode « Chacun pour soi »), un par joueur.
     room.scores = Object.fromEntries(room.order.map((id) => [id, 0]))
     room.lastActivityAt = Date.now()
     return room
+  })
+}
+
+// Mode « Chacun pour soi » : diffuse en direct la position de l'aiguille d'un
+// devineur (une clé par joueur), pour que l'auteur de l'indice voie tout le
+// monde bouger en temps réel. Écriture sur la clé du joueur : aucun conflit
+// entre devineurs, donc pas besoin de transaction.
+export async function setIndividualLiveAngle(roomCode, playerId, angle) {
+  await update(ref(db, `rooms/${roomCode}`), {
+    [`liveAngles/${playerId}`]: angle,
+    lastActivityAt: Date.now(),
   })
 }
 
@@ -304,6 +316,7 @@ export async function submitIndividualGuess(roomCode, turnIndex, playerId, guess
         guesses: guessEntries,
       }
       room.guesses = null
+      room.liveAngles = null
       room.turnPhase = 'reveal'
     }
     room.lastActivityAt = Date.now()
@@ -329,6 +342,7 @@ export async function advanceTurn(roomCode, turnIndex) {
     }
     room.consensusAgreements = null
     room.guesses = null
+    room.liveAngles = null
     room.lastActivityAt = Date.now()
     return room
   })
@@ -344,6 +358,7 @@ export async function playAgain(roomCode) {
     currentTurn: null,
     turnPhase: null,
     liveAngle: null,
+    liveAngles: null,
     consensusAgreements: null,
     guesses: null,
     score: 0,
