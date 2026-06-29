@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Le jeu de l'aiguille</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        height: 100%;
+        background: #1e1b2e;
+        color: #e8e4f8;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: calc(1.25rem + env(safe-area-inset-top))
+                 calc(1.25rem + env(safe-area-inset-right))
+                 calc(2.5rem  + env(safe-area-inset-bottom))
+                 calc(1.25rem + env(safe-area-inset-left));
+      }
+      .card {
+        background: #2d2a42;
+        border-radius: 1rem;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        max-width: 320px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .icon { font-size: 2.8rem; }
+      h1 { font-size: 1.3rem; font-weight: 700; }
+      p { color: #9d98b8; font-size: 0.9rem; line-height: 1.55; }
+      button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 0.9rem 1.25rem;
+        border-radius: 0.75rem;
+        border: none;
+        background: #a78bfa;
+        color: #1e1b2e;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 0.25rem;
+        transition: opacity 0.15s;
+      }
+      button:active { opacity: 0.75; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="icon">📡</div>
+      <h1>Pas de connexion</h1>
+      <p>
+        Le jeu de l'aiguille nécessite une connexion Internet.<br />
+        Vérifiez votre réseau et réessayez.
+      </p>
+      <button onclick="location.reload()">Réessayer</button>
+    </div>
+  </body>
+</html>

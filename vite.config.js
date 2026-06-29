@@ -9,7 +9,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png'],
+      includeAssets: ['icon.svg', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'offline.html'],
+      workbox: {
+        navigateFallback: '/jeu-de-laiguille/offline.html',
+        // Ne pas servir la page hors-ligne pour les requêtes vers des fichiers
+        // (JS, CSS, images…) — uniquement pour les navigations HTML.
+        navigateFallbackDenylist: [/\.[a-z]{2,5}(\?.*)?$/i],
+      },
       manifest: {
         name: "Le jeu de l'aiguille",
         short_name: "L'aiguille",
