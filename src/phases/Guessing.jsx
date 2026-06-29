@@ -102,7 +102,7 @@ function IndividualGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
             ))}
             <li className="score-row score-row--author">
               <span className="score-row__name">{sourceName} · indice</span>
-              <span>+{entry.authorScore}</span>
+              <span>{entry.authorScore >= 0 ? `+${entry.authorScore}` : entry.authorScore}</span>
             </li>
           </ul>
         </div>

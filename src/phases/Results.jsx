@@ -356,7 +356,9 @@ function IndividualResults({ roomCode, room, playerId }) {
                       <span className="score-row__name">
                         {room.players[authorId].name} · indice
                       </span>
-                      <span>+{entry.authorScore}</span>
+                      <span>
+                        {entry.authorScore >= 0 ? `+${entry.authorScore}` : entry.authorScore}
+                      </span>
                     </li>
                   </ul>
                 </div>
