@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { Semicircle } from '../components/Semicircle'
 import { AppHeader } from '../components/SettingsMenu'
 import { useSmoothAngle } from '../hooks/useSmoothAngle'
+import { useSmoothAngles } from '../hooks/useSmoothAngles'
 import { playerColor } from '../game/colors'
 import { effectiveGuessMode } from '../game/logic'
 import {
   submitIndividualGuess,
+  setIndividualLiveAngle,
   advanceTurn,
   setConsensusAngle,
   agreeOnConsensus,
@@ -50,19 +52,8 @@ function IndividualGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
   const guessers = room.order.filter((id) => id !== turn.sourceId)
   const guesses = room.guesses || {}
   const answered = guessers.filter((id) => guesses[id] != null).length
-  const iAnswered = guesses[playerId] != null
 
-  const [angle, setAngle] = useState(90)
   const [busy, setBusy] = useState(false)
-
-  const handleSubmit = async () => {
-    setBusy(true)
-    try {
-      await submitIndividualGuess(roomCode, turnIndex, playerId, angle)
-    } finally {
-      setBusy(false)
-    }
-  }
 
   const handleNextTurn = async () => {
     setBusy(true)
@@ -123,38 +114,153 @@ function IndividualGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
     )
   }
 
-  // L'auteur de l'indice patiente pendant que les autres devinent.
+  // L'auteur de l'indice patiente, mais voit les aiguilles des devineurs bouger
+  // en direct (chacune à sa couleur).
   if (isAuthor) {
     return (
-      <div className="app">
-        <AppHeader>
-          <h1 className="app__title">Les autres devinent ton indice</h1>
-          <span className="progress-pill">{progress}</span>
-        </AppHeader>
-
-        <div className="card">
-          <p className="text-muted">Ton indice :</p>
-          <p className="clue-text">{round.clue}</p>
-          <Semicircle spectrum={spectrum} mode="display" targetAngle={round.needleAngle} />
-        </div>
-
-        <div className="card">
-          <p className="text-muted">
-            {answered} / {guessers.length} joueurs ont répondu
-          </p>
-          <ul className="player-list">
-            {guessers.map((id) => (
-              <li key={id}>
-                {room.players[id].name} {guesses[id] != null ? '✅' : '⏳'}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      <IndividualAuthorWaiting
+        room={room}
+        round={round}
+        spectrum={spectrum}
+        progress={progress}
+        guessers={guessers}
+        guesses={guesses}
+        answered={answered}
+      />
     )
   }
 
-  // Devineur : place son aiguille, puis attend les autres une fois validé.
+  // Devineur : place son aiguille (diffusée en direct), puis attend les autres.
+  return (
+    <IndividualGuesser
+      roomCode={roomCode}
+      playerId={playerId}
+      turnIndex={turnIndex}
+      round={round}
+      spectrum={spectrum}
+      sourceName={sourceName}
+      progress={progress}
+      guessers={guessers}
+      guesses={guesses}
+      answered={answered}
+    />
+  )
+}
+
+// Vue de l'auteur pendant que les autres devinent : ses aiguilles bougent en
+// temps réel, lissées, et figées sur la position validée dès qu'un joueur a
+// répondu. La palette (position réelle) est affichée — l'auteur connaît déjà
+// la réponse puisque c'est son indice.
+function IndividualAuthorWaiting({ room, round, spectrum, progress, guessers, guesses, answered }) {
+  const targets = {}
+  guessers.forEach((id) => {
+    targets[id] = guesses[id] != null ? guesses[id] : (room.liveAngles?.[id] ?? 90)
+  })
+  const smoothed = useSmoothAngles(targets)
+  const needles = guessers.map((id) => ({
+    angle: smoothed[id] ?? 90,
+    color: playerColor(room.order, id),
+  }))
+
+  return (
+    <div className="app">
+      <AppHeader>
+        <h1 className="app__title">Les autres devinent ton indice</h1>
+        <span className="progress-pill">{progress}</span>
+      </AppHeader>
+
+      <div className="card">
+        <p className="text-muted">Ton indice :</p>
+        <p className="clue-text">{round.clue}</p>
+        <Semicircle
+          spectrum={spectrum}
+          mode="display"
+          targetAngle={round.needleAngle}
+          needles={needles}
+        />
+      </div>
+
+      <div className="card">
+        <p className="text-muted">
+          {answered} / {guessers.length} joueurs ont répondu
+        </p>
+        <ul className="player-list">
+          {guessers.map((id) => (
+            <li key={id} className="score-row">
+              <span className="score-row__name">
+                <span className="score-dot" style={{ background: playerColor(room.order, id) }} />
+                {room.players[id].name}
+              </span>
+              <span>{guesses[id] != null ? '✅' : '⏳'}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+// Vue du devineur : place son aiguille et diffuse sa position en direct (throttle
+// identique au mode Consensus) pour que l'auteur la voie bouger. Une fois validé,
+// l'aiguille se fige et le joueur attend les autres.
+function IndividualGuesser({
+  roomCode,
+  playerId,
+  turnIndex,
+  round,
+  spectrum,
+  sourceName,
+  progress,
+  guessers,
+  guesses,
+  answered,
+}) {
+  const iAnswered = guesses[playerId] != null
+  const [angle, setAngle] = useState(90)
+  const [busy, setBusy] = useState(false)
+  const lastSentRef = useRef(0)
+  const pendingRef = useRef(null)
+  const latestAngleRef = useRef(90)
+
+  useEffect(() => () => clearTimeout(pendingRef.current), [])
+
+  // Envoie immédiatement une position de diffusion encore en attente (fin de
+  // glissement, avant validation) pour que l'auteur voie la position finale.
+  const flushPending = () => {
+    if (!pendingRef.current) return Promise.resolve()
+    clearTimeout(pendingRef.current)
+    pendingRef.current = null
+    lastSentRef.current = Date.now()
+    return setIndividualLiveAngle(roomCode, playerId, latestAngleRef.current).catch(() => {})
+  }
+
+  const handleDrag = (newAngle) => {
+    setAngle(newAngle)
+    latestAngleRef.current = newAngle
+    const now = Date.now()
+    if (now - lastSentRef.current >= LIVE_THROTTLE_MS) {
+      lastSentRef.current = now
+      setIndividualLiveAngle(roomCode, playerId, newAngle).catch(() => {})
+    } else {
+      clearTimeout(pendingRef.current)
+      pendingRef.current = setTimeout(() => {
+        pendingRef.current = null
+        lastSentRef.current = Date.now()
+        setIndividualLiveAngle(roomCode, playerId, latestAngleRef.current).catch(() => {})
+      }, LIVE_THROTTLE_MS)
+    }
+  }
+
+  const handleSubmit = async () => {
+    setBusy(true)
+    try {
+      await flushPending()
+      await submitIndividualGuess(roomCode, turnIndex, playerId, angle)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="app">
       <AppHeader>
@@ -165,12 +271,14 @@ function IndividualGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
       <div className="card">
         <p className="text-muted">Indice de {sourceName} :</p>
         <p className="clue-text">{round.clue}</p>
-        <Semicircle
-          spectrum={spectrum}
-          mode={iAnswered ? 'display' : 'drag'}
-          angle={iAnswered ? guesses[playerId] : angle}
-          onChange={iAnswered ? undefined : setAngle}
-        />
+        <div onPointerUp={flushPending} onPointerCancel={flushPending}>
+          <Semicircle
+            spectrum={spectrum}
+            mode={iAnswered ? 'display' : 'drag'}
+            angle={iAnswered ? guesses[playerId] : angle}
+            onChange={iAnswered ? undefined : handleDrag}
+          />
+        </div>
       </div>
 
       {iAnswered ? (
