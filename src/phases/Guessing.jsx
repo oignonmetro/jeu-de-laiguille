@@ -387,7 +387,9 @@ function ConsensusGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
     return (
       <div className="app">
         <AppHeader>
-          <h1 className="app__title">Les autres devinent ton indice</h1>
+          <h1 className="app__title">
+            {others.length > 1 ? 'Les autres devinent ton indice' : 'Ton partenaire réfléchit'}
+          </h1>
           <span className="progress-pill">{progress}</span>
         </AppHeader>
 
