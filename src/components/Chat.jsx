@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { playerColor } from '../game/colors'
 import { sendChatMessage } from '../game/roomApi'
+import { useChatVisible } from '../hooks/useChatVisible'
 import './Chat.css'
 
 // Chat de salle : bouton flottant (avec pastille de messages non lus) qui
@@ -13,6 +14,7 @@ export function Chat({ roomCode, room, playerId }) {
   const [sending, setSending] = useState(false)
   const listRef = useRef(null)
   const [unread, setUnread] = useState(0)
+  const visible = useChatVisible()
 
   // Les clés push() sont chronologiques : un tri lexicographique suffit et
   // reste stable même quand le serverTimestamp n'est pas encore résolu.
@@ -63,6 +65,10 @@ export function Chat({ roomCode, room, playerId }) {
       setSending(false)
     }
   }
+
+  // Bouton masqué via les paramètres : on n'affiche rien (les hooks ci-dessus
+  // continuent de tourner, donc les non-lus restent comptés si on le réaffiche).
+  if (!visible) return null
 
   return (
     <>
