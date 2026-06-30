@@ -6,6 +6,7 @@ import { ClueWriting } from './phases/ClueWriting'
 import { Guessing } from './phases/Guessing'
 import { Results } from './phases/Results'
 import { GameControlProvider } from './components/SettingsMenu'
+import { Chat } from './components/Chat'
 import { useRoom } from './hooks/useRoom'
 import { leaveRoom, cleanupIfInactive, playAgain } from './game/roomApi'
 import { getOrCreatePlayerId } from './game/playerId'
@@ -136,6 +137,7 @@ function App() {
   return (
     <GameControlProvider value={gameControl}>
       {screen}
+      <Chat roomCode={roomCode} room={room} playerId={playerId} />
       <footer className="room-footer">
         {room.status !== 'lobby' && (
           <span>

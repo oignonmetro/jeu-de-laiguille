@@ -1,4 +1,13 @@
-import { ref, set, update, get, onValue, runTransaction, serverTimestamp } from 'firebase/database'
+import {
+  ref,
+  set,
+  update,
+  get,
+  onValue,
+  push,
+  runTransaction,
+  serverTimestamp,
+} from 'firebase/database'
 import { db } from '../firebase'
 import { generateRoomCode } from './codes'
 import { AppError } from './errors'
@@ -16,6 +25,9 @@ import {
 // toutes les fonctions ci-dessous qui font progresser la partie) pendant ce
 // délai est considérée abandonnée et peut être supprimée.
 const ROOM_INACTIVITY_MS = 30 * 60 * 1000
+
+// Longueur maximale d'un message de chat (anti-abus, cf. règles de la base).
+const MAX_CHAT_LENGTH = 500
 
 export async function createRoom(playerId, playerName) {
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -366,6 +378,25 @@ export async function playAgain(roomCode) {
     guesses: null,
     score: 0,
     scores: null,
+    lastActivityAt: Date.now(),
+  })
+}
+
+// Chat de la salle : ajoute un message. push() génère une clé ordonnée
+// chronologiquement, et on écrit le message + on rafraîchit lastActivityAt en
+// une seule mise à jour (un message compte comme une activité, la salle ne
+// sera donc pas nettoyée tant qu'on discute). Le texte est élagué et tronqué.
+export async function sendChatMessage(roomCode, playerId, name, text) {
+  const trimmed = (text || '').trim().slice(0, MAX_CHAT_LENGTH)
+  if (!trimmed) return
+  const messageId = push(ref(db, `rooms/${roomCode}/chat`)).key
+  await update(ref(db, `rooms/${roomCode}`), {
+    [`chat/${messageId}`]: {
+      playerId,
+      name,
+      text: trimmed,
+      ts: serverTimestamp(),
+    },
     lastActivityAt: Date.now(),
   })
 }
