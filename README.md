@@ -28,16 +28,27 @@ et l'équipe marque jusqu'à 4 points par manche (24 points max à 2 joueurs,
 
 ### Modes de jeu
 
+Le jeu se décline en **trois modes** selon le nombre de joueurs.
+
+- **À 2 joueurs** : partie coopérative. À chaque tour, l'unique partenaire
+  place l'aiguille pour deviner l'indice de l'autre, et vous marquez les
+  points ensemble (jusqu'à 4 par manche). Il n'y a pas de carte de mode à
+  choisir.
+
 À partir de 3 joueurs, le lobby affiche une carte **« Mode de jeu »** où
 l'hôte choisit entre :
 
-- **Solo** (par défaut) : comme décrit ci-dessus, un seul joueur devine à
-  chaque tour.
+- **Chacun pour soi** (par défaut) : tous les joueurs sauf l'auteur de
+  l'indice devinent en même temps, chacun sur son téléphone. Chaque devineur
+  marque ses propres points et l'auteur récupère la somme des points de tous
+  — mais perd 1 point si son indice n'a fait marquer personne. L'auteur voit
+  les aiguilles de chacun bouger en direct, dans une couleur par joueur, et
+  un classement individuel est affiché à la fin.
 - **Consensus** : tous les joueurs sauf l'auteur de l'indice voient la même
   aiguille et doivent se mettre d'accord sur sa position. Chacun peut la
   déplacer (ce qui réinitialise les accords déjà donnés) puis valider avec
   **« Je suis d'accord »** ; le tour n'est noté que lorsque tout le monde est
-  d'accord.
+  d'accord. Le score est commun à toute l'équipe.
 
 ### Personnaliser les spectres
 
