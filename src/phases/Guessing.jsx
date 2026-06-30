@@ -397,18 +397,21 @@ function ConsensusGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
           <LiveSemicircle spectrum={spectrum} liveAngle={room.liveAngle ?? 90} />
         </div>
 
-        <div className="card">
-          <p className="text-muted">
-            {agreedCount} / {others.length} joueurs d&apos;accord
-          </p>
-          <ul className="player-list">
-            {others.map((id) => (
-              <li key={id}>
-                {room.players[id].name} {agreements[id] ? '✅' : '⏳'}
-              </li>
-            ))}
-          </ul>
-        </div>
+        {/* À 2 joueurs (un seul devineur), le décompte d'accords est superflu. */}
+        {others.length > 1 && (
+          <div className="card">
+            <p className="text-muted">
+              {agreedCount} / {others.length} joueurs d&apos;accord
+            </p>
+            <ul className="player-list">
+              {others.map((id) => (
+                <li key={id}>
+                  {room.players[id].name} {agreements[id] ? '✅' : '⏳'}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     )
   }
@@ -520,19 +523,22 @@ function ConsensusGuesser({
         </div>
       </div>
 
-      <div className="card">
-        <p className="text-muted">
-          {agreedCount} / {others.length} joueurs d&apos;accord
-        </p>
-        <ul className="player-list">
-          {others.map((id) => (
-            <li key={id}>
-              {room.players[id].name}
-              {id === playerId ? ' (toi)' : ''} {agreements[id] ? '✅' : '⏳'}
-            </li>
-          ))}
-        </ul>
-      </div>
+      {/* À 2 joueurs (le devineur est seul), le décompte d'accords est superflu. */}
+      {others.length > 1 && (
+        <div className="card">
+          <p className="text-muted">
+            {agreedCount} / {others.length} joueurs d&apos;accord
+          </p>
+          <ul className="player-list">
+            {others.map((id) => (
+              <li key={id}>
+                {room.players[id].name}
+                {id === playerId ? ' (toi)' : ''} {agreements[id] ? '✅' : '⏳'}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <button className="btn" onClick={handleAgree} disabled={busy || iAgreed}>
         {iAgreed ? 'En attente des autres...' : "Je suis d'accord"}
