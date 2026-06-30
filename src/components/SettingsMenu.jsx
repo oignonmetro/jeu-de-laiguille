@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from 'react'
 import { isHapticsEnabled, setHapticsEnabled } from '../utils/haptics'
+import { isChatVisible, setChatVisible } from '../utils/chatVisibility'
 import './SettingsMenu.css'
 
 // Actions de partie réservées à l'hôte, exposées au menu Paramètres (présent
@@ -16,6 +17,7 @@ export function GameControlProvider({ value, children }) {
 export function AppHeader({ children }) {
   const [open, setOpen] = useState(false)
   const [haptics, setHaptics] = useState(isHapticsEnabled)
+  const [chatShown, setChatShown] = useState(isChatVisible)
   const [busy, setBusy] = useState(false)
   const gameControl = useContext(GameControlContext)
 
@@ -24,6 +26,12 @@ export function AppHeader({ children }) {
     setHaptics(next)
     setHapticsEnabled(next)
     if (next) navigator.vibrate?.(50)
+  }
+
+  const toggleChat = () => {
+    const next = !chatShown
+    setChatShown(next)
+    setChatVisible(next)
   }
 
   // Recommence la partie en cours : tout le monde repart du salon, score
@@ -81,6 +89,19 @@ export function AppHeader({ children }) {
               </span>
               <span className="switch">
                 <input type="checkbox" checked={haptics} onChange={toggleHaptics} />
+                <span className="switch__slider" aria-hidden="true" />
+              </span>
+            </label>
+
+            <label className="settings-row">
+              <span>
+                Bouton de chat
+                <span className="settings-row__hint">
+                  Affiche la bulle de discussion en bas de l&apos;écran
+                </span>
+              </span>
+              <span className="switch">
+                <input type="checkbox" checked={chatShown} onChange={toggleChat} />
                 <span className="switch__slider" aria-hidden="true" />
               </span>
             </label>
