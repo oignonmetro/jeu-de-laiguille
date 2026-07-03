@@ -25,11 +25,17 @@ export function ClueWriting({ roomCode, room, playerId }) {
             En attente des autres joueurs ({readyCount}/{room.order.length})...
           </p>
           <ul className="player-list">
-            {room.order.map((id) => (
-              <li key={id}>
-                {room.players[id].name} {room.rounds[id].every((r) => r.ready) ? '✅' : '⏳'}
-              </li>
-            ))}
+            {room.order.map((id) => {
+              const rounds = room.rounds[id]
+              const done = rounds.filter((r) => r.ready).length
+              const finished = done === rounds.length
+              return (
+                <li key={id} className="score-row">
+                  <span className="score-row__name">{room.players[id].name}</span>
+                  <span>{finished ? '✅' : `${done}/${rounds.length}`}</span>
+                </li>
+              )
+            })}
           </ul>
         </div>
       </div>
