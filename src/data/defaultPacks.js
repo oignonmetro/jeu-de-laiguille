@@ -58,6 +58,12 @@ export const DEFAULT_PACKS = [
       { left: 'Présent dans une grotte', right: 'Présent dans un vaisseau spatial' },
       { left: 'Fait pour l\'été', right: 'Fait pour l\'hiver' },
       { left: 'Chaise', right: 'Oie' },
+    ],
+  },
+  {
+    id: 'piment',
+    name: 'Un peu de piment',
+    spectra: [
       { left: 'Hétéro', right: 'Gay' },
       { left: 'Ferait un bon coup au lit', right: 'Ne ferait pas un bon coup au lit' },
       { left: 'Green flag', right: 'Red flag' },
