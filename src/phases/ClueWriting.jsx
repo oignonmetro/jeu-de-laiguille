@@ -84,7 +84,7 @@ export function ClueWriting({ roomCode, room, playerId }) {
       </AppHeader>
 
       <div className="card">
-        <Semicircle spectrum={spectrum} mode="display" targetAngle={round.needleAngle} />
+        <Semicircle spectrum={spectrum} mode="display" angle={round.needleAngle} />
         <button
           className="btn btn--ghost btn--small reroll-btn"
           onClick={handleReroll}
