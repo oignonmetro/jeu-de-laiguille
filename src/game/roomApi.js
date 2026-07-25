@@ -29,6 +29,9 @@ const ROOM_INACTIVITY_MS = 30 * 60 * 1000
 // Longueur maximale d'un message de chat (anti-abus, cf. règles de la base).
 const MAX_CHAT_LENGTH = 500
 
+// Nombre maximum de joueurs dans une même salle.
+const MAX_PLAYERS = 15
+
 export async function createRoom(playerId, playerName) {
   for (let attempt = 0; attempt < 5; attempt++) {
     const roomCode = generateRoomCode()
@@ -68,6 +71,9 @@ export async function joinRoom(roomCode, playerId, playerName) {
   }
   if (room.status !== 'lobby') {
     throw new AppError('La partie a déjà commencé.')
+  }
+  if ((room.order || []).length >= MAX_PLAYERS) {
+    throw new AppError(`La salle est pleine (${MAX_PLAYERS} joueurs max).`)
   }
   const order = [...(room.order || []), playerId]
   await update(roomRef, {
