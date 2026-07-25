@@ -116,6 +116,15 @@ export function buildClueTurns(order) {
   return turns
 }
 
+// Malus infligé à l'auteur d'un indice que personne n'a fait marquer :
+// -1 point à 3-4 joueurs, -2 à 5-6, -3 à 7-8, etc. (un cran de plus tous les
+// 2 joueurs supplémentaires). En dessous de 3 joueurs le mode individuel
+// n'est jamais actif (cf. effectiveGuessMode), mais on protège quand même
+// contre un malus nul ou positif avec Math.max.
+export function noGuessPenalty(playerCount) {
+  return -Math.max(1, Math.floor((playerCount - 3) / 2) + 1)
+}
+
 // Mode de jeu effectivement appliqué. Le mode « Chacun pour soi » (scores
 // individuels) n'est disponible qu'à partir de 3 joueurs ; en dessous, la
 // partie se joue toujours en coopératif (Consensus), où l'unique autre joueur
