@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from 'react'
 import { isHapticsEnabled, setHapticsEnabled } from '../utils/haptics'
 import { isChatVisible, setChatVisible } from '../utils/chatVisibility'
+import { isChatLarge, setChatLarge } from '../utils/chatSize'
 import './SettingsMenu.css'
 
 // Actions de partie réservées à l'hôte, exposées au menu Paramètres (présent
@@ -18,6 +19,7 @@ export function AppHeader({ children }) {
   const [open, setOpen] = useState(false)
   const [haptics, setHaptics] = useState(isHapticsEnabled)
   const [chatShown, setChatShown] = useState(isChatVisible)
+  const [chatLarge, setChatLargeState] = useState(isChatLarge)
   const [busy, setBusy] = useState(false)
   const gameControl = useContext(GameControlContext)
 
@@ -32,6 +34,12 @@ export function AppHeader({ children }) {
     const next = !chatShown
     setChatShown(next)
     setChatVisible(next)
+  }
+
+  const toggleChatSize = () => {
+    const next = !chatLarge
+    setChatLargeState(next)
+    setChatLarge(next)
   }
 
   // Recommence la partie en cours : tout le monde repart du salon, score
@@ -102,6 +110,20 @@ export function AppHeader({ children }) {
               </span>
               <span className="switch">
                 <input type="checkbox" checked={chatShown} onChange={toggleChat} />
+                <span className="switch__slider" aria-hidden="true" />
+              </span>
+            </label>
+
+            <label className="settings-row">
+              <span>
+                Petite fenêtre de chat / Grande fenêtre
+                <span className="settings-row__hint">
+                  Taille du panneau de chat à l&apos;ouverture (4/10 de l&apos;écran par défaut,
+                  7/10 si activé)
+                </span>
+              </span>
+              <span className="switch">
+                <input type="checkbox" checked={chatLarge} onChange={toggleChatSize} />
                 <span className="switch__slider" aria-hidden="true" />
               </span>
             </label>
