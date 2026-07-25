@@ -9,6 +9,7 @@ import { playerColor } from '../game/colors'
 import { effectiveGuessMode } from '../game/logic'
 import { playAgain } from '../game/roomApi'
 import { vibrate } from '../utils/haptics'
+import { isRevealSkipped } from '../utils/resultsReveal'
 
 // Cinématique de révélation : chaque manche se déroule en deux étapes —
 // 1) présentation du résultat (palette, aiguille, score de la manche)
@@ -34,8 +35,10 @@ export function Results({ roomCode, room, playerId }) {
 function CooperativeResults({ roomCode, room, playerId }) {
   const [busy, setBusy] = useState(false)
   // phase 'turns' : manches révélées une à une ; 'finale' : score total
-  // dramatisé ; 'recap' : récapitulatif détaillé complet.
-  const [phase, setPhase] = useState('turns')
+  // dramatisé ; 'recap' : récapitulatif détaillé complet. Réglage « Résultat
+  // final direct » (paramètres) : démarre directement en 'finale', comme un
+  // clic immédiat sur « Passer ».
+  const [phase, setPhase] = useState(() => (isRevealSkipped() ? 'finale' : 'turns'))
   const [turnIndex, setTurnIndex] = useState(0)
   const [stage, setStage] = useState('result')
   const isHost = room.hostId === playerId

@@ -2,6 +2,7 @@ import { createContext, useContext, useState } from 'react'
 import { isHapticsEnabled, setHapticsEnabled } from '../utils/haptics'
 import { isChatVisible, setChatVisible } from '../utils/chatVisibility'
 import { isChatLarge, setChatLarge } from '../utils/chatSize'
+import { isRevealSkipped, setRevealSkipped } from '../utils/resultsReveal'
 import './SettingsMenu.css'
 
 // Actions de partie réservées à l'hôte, exposées au menu Paramètres (présent
@@ -20,6 +21,7 @@ export function AppHeader({ children }) {
   const [haptics, setHaptics] = useState(isHapticsEnabled)
   const [chatShown, setChatShown] = useState(isChatVisible)
   const [chatLarge, setChatLargeState] = useState(isChatLarge)
+  const [skipReveal, setSkipReveal] = useState(isRevealSkipped)
   const [busy, setBusy] = useState(false)
   const gameControl = useContext(GameControlContext)
 
@@ -40,6 +42,12 @@ export function AppHeader({ children }) {
     const next = !chatLarge
     setChatLargeState(next)
     setChatLarge(next)
+  }
+
+  const toggleSkipReveal = () => {
+    const next = !skipReveal
+    setSkipReveal(next)
+    setRevealSkipped(next)
   }
 
   // Recommence la partie en cours : tout le monde repart du salon, score
@@ -124,6 +132,20 @@ export function AppHeader({ children }) {
               </span>
               <span className="switch">
                 <input type="checkbox" checked={chatLarge} onChange={toggleChatSize} />
+                <span className="switch__slider" aria-hidden="true" />
+              </span>
+            </label>
+
+            <label className="settings-row">
+              <span>
+                Afficher le récap / Résultat final direct
+                <span className="settings-row__hint">
+                  Anime chaque manche avant le score (par défaut), ou saute directement à
+                  l&apos;écran de résultat final, comme le bouton « Passer »
+                </span>
+              </span>
+              <span className="switch">
+                <input type="checkbox" checked={skipReveal} onChange={toggleSkipReveal} />
                 <span className="switch__slider" aria-hidden="true" />
               </span>
             </label>
