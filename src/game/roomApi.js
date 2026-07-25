@@ -16,6 +16,7 @@ import {
   buildClueTurns,
   computeScore,
   mergeSpectra,
+  noGuessPenalty,
   pickDifferentSpectrum,
   randomAngle,
   MAX_REROLLS,
@@ -297,9 +298,10 @@ export async function setIndividualLiveAngle(roomCode, playerId, angle) {
 // Mode « Chacun pour soi » : enregistre l'aiguille d'un devineur pour le tour
 // courant. Dès que tous les joueurs (sauf l'auteur de l'indice) ont répondu,
 // on calcule les points — chaque devineur marque les siens, l'auteur récupère
-// la somme, ou -1 si son indice n'a rapporté aucun point à personne — puis on
-// passe le tour en "reveal". Transaction pour qu'un seul calcul ait lieu même
-// si les dernières réponses arrivent en même temps.
+// la somme, ou un malus (cf. noGuessPenalty) si son indice n'a rapporté aucun
+// point à personne — puis on passe le tour en "reveal". Transaction pour
+// qu'un seul calcul ait lieu même si les dernières réponses arrivent en même
+// temps.
 export async function submitIndividualGuess(roomCode, turnIndex, playerId, guessedAngle) {
   const roomRef = ref(db, `rooms/${roomCode}`)
   await runTransaction(roomRef, (room) => {
@@ -326,8 +328,9 @@ export async function submitIndividualGuess(roomCode, turnIndex, playerId, guess
         room.scores[id] = (room.scores[id] || 0) + score
         authorScore += score
       })
-      // Malus : un indice qui ne fait marquer personne coûte 1 point à l'auteur.
-      if (authorScore === 0) authorScore = -1
+      // Malus : un indice qui ne fait marquer personne coûte des points à
+      // l'auteur, proportionnellement au nombre de joueurs.
+      if (authorScore === 0) authorScore = noGuessPenalty(room.order.length)
       room.scores[turn.sourceId] = (room.scores[turn.sourceId] || 0) + authorScore
       room.results[turn.sourceId][turn.roundIndex] = {
         spectrumIndex: round.spectrumIndex,
