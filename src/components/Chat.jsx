@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { playerColor } from '../game/colors'
 import { sendChatMessage } from '../game/roomApi'
 import { useChatVisible } from '../hooks/useChatVisible'
+import { useChatLarge } from '../hooks/useChatLarge'
 import './Chat.css'
 
 // Chat de salle : bouton flottant (avec pastille de messages non lus) qui
@@ -15,6 +16,7 @@ export function Chat({ roomCode, room, playerId }) {
   const listRef = useRef(null)
   const [unread, setUnread] = useState(0)
   const visible = useChatVisible()
+  const large = useChatLarge()
 
   // Les clés push() sont chronologiques : un tri lexicographique suffit et
   // reste stable même quand le serverTimestamp n'est pas encore résolu.
@@ -92,7 +94,7 @@ export function Chat({ roomCode, room, playerId }) {
       {open && (
         <div className="chat-overlay" onClick={() => setOpen(false)}>
           <div
-            className="chat-panel"
+            className={`chat-panel${large ? ' chat-panel--large' : ''}`}
             role="dialog"
             aria-label="Chat"
             onClick={(e) => e.stopPropagation()}
