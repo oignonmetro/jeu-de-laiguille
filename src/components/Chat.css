@@ -55,8 +55,8 @@
 .chat-panel {
   width: 100%;
   max-width: var(--max-width);
-  height: 75vh;
-  max-height: 75vh;
+  height: 40vh;
+  max-height: 40vh;
   background: var(--color-surface);
   border-radius: var(--radius) var(--radius) 0 0;
   display: flex;
@@ -64,6 +64,12 @@
   padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
   gap: 0.75rem;
   animation: chat-slide-up 0.25s ease;
+}
+
+/* Réglage « Grande fenêtre de chat » dans les paramètres. */
+.chat-panel--large {
+  height: 75vh;
+  max-height: 75vh;
 }
 
 @keyframes chat-slide-up {
