@@ -3,7 +3,7 @@ import { DEFAULT_PACKS } from '../data/defaultPacks'
 import { AppHeader } from '../components/SettingsMenu'
 import { getCustomPackRefs } from '../game/customPacks'
 import { loadPack } from '../game/packApi'
-import { addPack, removePack, setGuessMode, startGame } from '../game/roomApi'
+import { addPack, removePack, setGuessMode, setPhotoClues, startGame } from '../game/roomApi'
 import { mergeSpectra } from '../game/logic'
 import { userMessage } from '../game/errors'
 
@@ -19,6 +19,7 @@ export function Lobby({ roomCode, room, playerId }) {
   const totalSpectra = mergeSpectra(Object.values(selectedPacks)).length
   const canStart = selectedNames.length > 0 && players.length >= 2
   const guessMode = room.guessMode === 'consensus' ? 'consensus' : 'solo'
+  const photoClues = Boolean(room.photoClues)
 
   const handleToggleDefault = async (pack) => {
     setBusy(true)
@@ -70,6 +71,18 @@ export function Lobby({ roomCode, room, playerId }) {
     setError('')
     try {
       await setGuessMode(roomCode, mode)
+    } catch (err) {
+      setError(userMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleSetPhotoClues = async (enabled) => {
+    setBusy(true)
+    setError('')
+    try {
+      await setPhotoClues(roomCode, enabled)
     } catch (err) {
       setError(userMessage(err))
     } finally {
@@ -136,6 +149,43 @@ export function Lobby({ roomCode, room, playerId }) {
           )}
         </div>
       )}
+
+      <div className="card">
+        <h2>Indices</h2>
+        {isHost ? (
+          <ul className="pack-list pack-list--selectable">
+            <li>
+              <button
+                className={`pack-option ${!photoClues ? 'pack-option--selected' : ''}`}
+                onClick={() => handleSetPhotoClues(false)}
+                disabled={busy}
+              >
+                Texte seul
+                <span className="text-muted"> · un indice écrit, comme d&apos;habitude</span>
+              </button>
+            </li>
+            <li>
+              <button
+                className={`pack-option ${photoClues ? 'pack-option--selected' : ''}`}
+                onClick={() => handleSetPhotoClues(true)}
+                disabled={busy}
+              >
+                📷 Texte et/ou photo
+                <span className="text-muted">
+                  {' '}
+                  · chacun peut joindre une photo de son téléphone
+                </span>
+              </button>
+            </li>
+          </ul>
+        ) : (
+          <p className="text-muted">
+            {photoClues
+              ? 'Texte et/ou photo · chacun peut joindre une photo de son téléphone'
+              : "Texte seul · un indice écrit, comme d'habitude"}
+          </p>
+        )}
+      </div>
 
       {isHost ? (
         <div className="card">

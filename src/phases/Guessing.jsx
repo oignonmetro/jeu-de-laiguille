@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Semicircle } from '../components/Semicircle'
 import { AppHeader } from '../components/SettingsMenu'
+import { CluePhoto } from '../components/CluePhoto'
 import { useSmoothAngle } from '../hooks/useSmoothAngle'
 import { useSmoothAngles } from '../hooks/useSmoothAngles'
 import { playerColor } from '../game/colors'
@@ -79,7 +80,13 @@ function IndividualGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
 
         <div className="card">
           <p className="text-muted">Indice de {sourceName} :</p>
-          <p className="clue-text">{entry.clue}</p>
+          <CluePhoto
+            roomCode={roomCode}
+            playerId={turn.sourceId}
+            roundIndex={turn.roundIndex}
+            hasPhoto={round.hasPhoto}
+          />
+          {entry.clue && <p className="clue-text">{entry.clue}</p>}
           <Semicircle
             spectrum={spectrum}
             mode="result"
@@ -119,8 +126,10 @@ function IndividualGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
   if (isAuthor) {
     return (
       <IndividualAuthorWaiting
+        roomCode={roomCode}
         room={room}
         round={round}
+        turn={turn}
         spectrum={spectrum}
         progress={progress}
         guessers={guessers}
@@ -137,6 +146,7 @@ function IndividualGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
       playerId={playerId}
       turnIndex={turnIndex}
       round={round}
+      turn={turn}
       spectrum={spectrum}
       sourceName={sourceName}
       progress={progress}
@@ -151,7 +161,17 @@ function IndividualGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
 // temps réel, lissées, et figées sur la position validée dès qu'un joueur a
 // répondu. La palette (position réelle) est affichée — l'auteur connaît déjà
 // la réponse puisque c'est son indice.
-function IndividualAuthorWaiting({ room, round, spectrum, progress, guessers, guesses, answered }) {
+function IndividualAuthorWaiting({
+  roomCode,
+  room,
+  round,
+  turn,
+  spectrum,
+  progress,
+  guessers,
+  guesses,
+  answered,
+}) {
   const targets = {}
   guessers.forEach((id) => {
     targets[id] = guesses[id] != null ? guesses[id] : (room.liveAngles?.[id] ?? 90)
@@ -171,7 +191,13 @@ function IndividualAuthorWaiting({ room, round, spectrum, progress, guessers, gu
 
       <div className="card">
         <p className="text-muted">Ton indice :</p>
-        <p className="clue-text">{round.clue}</p>
+        <CluePhoto
+          roomCode={roomCode}
+          playerId={turn.sourceId}
+          roundIndex={turn.roundIndex}
+          hasPhoto={round.hasPhoto}
+        />
+        {round.clue && <p className="clue-text">{round.clue}</p>}
         <Semicircle
           spectrum={spectrum}
           mode="display"
@@ -208,6 +234,7 @@ function IndividualGuesser({
   playerId,
   turnIndex,
   round,
+  turn,
   spectrum,
   sourceName,
   progress,
@@ -270,7 +297,13 @@ function IndividualGuesser({
 
       <div className="card">
         <p className="text-muted">Indice de {sourceName} :</p>
-        <p className="clue-text">{round.clue}</p>
+        <CluePhoto
+          roomCode={roomCode}
+          playerId={turn.sourceId}
+          roundIndex={turn.roundIndex}
+          hasPhoto={round.hasPhoto}
+        />
+        {round.clue && <p className="clue-text">{round.clue}</p>}
         <div onPointerUp={flushPending} onPointerCancel={flushPending}>
           <Semicircle
             spectrum={spectrum}
@@ -366,7 +399,13 @@ function ConsensusGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
 
         <div className="card">
           <p className="text-muted">Indice de {sourceName} :</p>
-          <p className="clue-text">{entry.clue}</p>
+          <CluePhoto
+            roomCode={roomCode}
+            playerId={turn.sourceId}
+            roundIndex={turn.roundIndex}
+            hasPhoto={round.hasPhoto}
+          />
+          {entry.clue && <p className="clue-text">{entry.clue}</p>}
           <Semicircle
             spectrum={spectrum}
             mode="result"
@@ -395,7 +434,13 @@ function ConsensusGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
 
         <div className="card">
           <p className="text-muted">Ton indice :</p>
-          <p className="clue-text">{round.clue}</p>
+          <CluePhoto
+            roomCode={roomCode}
+            playerId={turn.sourceId}
+            roundIndex={turn.roundIndex}
+            hasPhoto={round.hasPhoto}
+          />
+          {round.clue && <p className="clue-text">{round.clue}</p>}
           <LiveSemicircle spectrum={spectrum} liveAngle={room.liveAngle ?? 90} />
         </div>
 
@@ -424,6 +469,7 @@ function ConsensusGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
       room={room}
       playerId={playerId}
       round={round}
+      turn={turn}
       spectrum={spectrum}
       sourceName={sourceName}
       others={others}
@@ -442,6 +488,7 @@ function ConsensusGuesser({
   room,
   playerId,
   round,
+  turn,
   spectrum,
   sourceName,
   others,
@@ -515,7 +562,13 @@ function ConsensusGuesser({
 
       <div className="card">
         <p className="text-muted">Indice de {sourceName} :</p>
-        <p className="clue-text">{round.clue}</p>
+        <CluePhoto
+          roomCode={roomCode}
+          playerId={turn.sourceId}
+          roundIndex={turn.roundIndex}
+          hasPhoto={round.hasPhoto}
+        />
+        {round.clue && <p className="clue-text">{round.clue}</p>}
         <div
           onPointerDown={() => setDragging(true)}
           onPointerUp={handlePointerEnd}

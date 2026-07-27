@@ -1,0 +1,65 @@
+/* Vignette de la photo jointe à un indice, cliquable pour l'agrandir. */
+.clue-photo {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--color-surface-alt);
+  line-height: 0;
+  margin-bottom: 0.75rem;
+}
+
+/* Volontairement contenue : l'écran doit garder de la place pour le
+   demi-cercle qu'on manipule juste en dessous. Un appui agrandit la photo. */
+.clue-photo img {
+  width: 100%;
+  max-height: 32vh;
+  object-fit: contain;
+  display: block;
+}
+
+/* Réserve la place pendant le chargement pour éviter que l'écran ne saute. */
+.clue-photo--loading {
+  height: 10rem;
+  animation: clue-photo-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes clue-photo-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clue-photo--loading {
+    animation: none;
+  }
+}
+
+.clue-photo__error {
+  margin-bottom: 0.75rem;
+}
+
+/* Plein écran : la photo occupe l'espace disponible, un clic n'importe où ferme. */
+.clue-photo__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.clue-photo__overlay img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}

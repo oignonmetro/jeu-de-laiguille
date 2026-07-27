@@ -104,6 +104,12 @@ des écritures pour éviter les abus.
         ".read": true,
         ".write": true
       }
+    },
+    "photos": {
+      "$roomCode": {
+        ".read": true,
+        ".write": true
+      }
     }
   }
 }
@@ -112,6 +118,13 @@ des écritures pour éviter les abus.
 > Si ta base existe déjà avec une ancienne règle `".write": "!data.exists()"`
 > sur `packs`, mets-la à jour vers `".write": true` pour pouvoir éditer les
 > packs personnalisés depuis l'app.
+
+> Le nœud `photos` est nécessaire aux indices photo (option activable par
+> l'hôte dans le salon). Les images y sont stockées hors du nœud de la salle,
+> qui est écouté en continu par tous les joueurs : elles ne sont ainsi chargées
+> que par ceux qui doivent les voir, au moment où l'indice est joué. Elles sont
+> supprimées avec la salle (inactivité, dernier joueur parti) et au lancement
+> d'une nouvelle partie.
 
 ## Développement local
 
