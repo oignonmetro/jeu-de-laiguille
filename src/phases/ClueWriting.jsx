@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Semicircle } from '../components/Semicircle'
 import { AppHeader } from '../components/SettingsMenu'
 import { submitClue, setRoundReady, tryAdvanceToGuessing, rerollSpectrum } from '../game/roomApi'
+import { savePhoto } from '../game/photoApi'
+import { userMessage } from '../game/errors'
+import { compressImage } from '../utils/photo'
 import { MAX_REROLLS } from '../game/logic'
 
 export function ClueWriting({ roomCode, room, playerId }) {
@@ -10,6 +13,12 @@ export function ClueWriting({ roomCode, room, playerId }) {
   const [index, setIndex] = useState(startIndex === -1 ? 0 : startIndex)
   const [draft, setDraft] = useState(myRounds[startIndex === -1 ? 0 : startIndex]?.clue || '')
   const [busy, setBusy] = useState(false)
+  // Photo choisie pour la manche en cours (déjà compressée, pas encore
+  // envoyée : l'envoi a lieu à la validation, avec le reste de l'indice).
+  const [photo, setPhoto] = useState(null)
+  const [photoError, setPhotoError] = useState('')
+  const fileInputRef = useRef(null)
+  const photoAllowed = Boolean(room.photoClues)
 
   const allReady = myRounds.every((r) => r.ready)
 
@@ -56,19 +65,42 @@ export function ClueWriting({ roomCode, room, playerId }) {
     }
   }
 
+  // La photo est redimensionnée et recompressée sur le téléphone avant tout
+  // envoi (une photo brute pèse plusieurs Mo, cf. utils/photo).
+  const handlePickPhoto = async (event) => {
+    const file = event.target.files?.[0]
+    // Réinitialise l'input pour pouvoir re-choisir le même fichier ensuite.
+    event.target.value = ''
+    if (!file) return
+    setPhotoError('')
+    setBusy(true)
+    try {
+      setPhoto(await compressImage(file))
+    } catch (err) {
+      setPhotoError(userMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const handleNext = async () => {
     const clue = draft.trim()
     setBusy(true)
+    setPhotoError('')
     try {
-      await submitClue(roomCode, playerId, index, clue)
+      if (photo) await savePhoto(roomCode, playerId, index, photo)
+      await submitClue(roomCode, playerId, index, clue, Boolean(photo))
       await setRoundReady(roomCode, playerId, index, true)
       if (!isLast) {
         const next = index + 1
         setIndex(next)
         setDraft(myRounds[next]?.clue || '')
+        setPhoto(null)
       } else {
         await tryAdvanceToGuessing(roomCode)
       }
+    } catch (err) {
+      setPhotoError(userMessage(err))
     } finally {
       setBusy(false)
     }
@@ -95,7 +127,9 @@ export function ClueWriting({ roomCode, room, playerId }) {
       </div>
 
       <div className="card field">
-        <label htmlFor="clue">Ton indice</label>
+        <label htmlFor="clue">
+          {photoAllowed ? 'Ton indice (texte, photo, ou les deux)' : 'Ton indice'}
+        </label>
         <input
           id="clue"
           value={draft}
@@ -103,9 +137,48 @@ export function ClueWriting({ roomCode, room, playerId }) {
           maxLength={120}
           autoFocus
         />
+
+        {photoAllowed && (
+          <>
+            {photo && (
+              <div className="clue-photo-preview">
+                <img src={photo} alt="Aperçu de la photo choisie" />
+              </div>
+            )}
+            {/* Sans attribut `capture` : le téléphone laisse le choix entre
+                l'appareil photo et la galerie. */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="visually-hidden"
+              onChange={handlePickPhoto}
+            />
+            <div className="clue-photo-actions">
+              <button
+                className="btn btn--ghost btn--small"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={busy}
+              >
+                {photo ? '🔄 Changer la photo' : '📷 Ajouter une photo'}
+              </button>
+              {photo && (
+                <button
+                  className="btn btn--ghost btn--small"
+                  onClick={() => setPhoto(null)}
+                  disabled={busy}
+                >
+                  Retirer
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
-      <button className="btn" onClick={handleNext} disabled={busy || !draft.trim()}>
+      {photoError && <p className="error">{photoError}</p>}
+
+      <button className="btn" onClick={handleNext} disabled={busy || (!draft.trim() && !photo)}>
         {isLast ? 'Valider mes indices' : 'Suivant'}
       </button>
     </div>

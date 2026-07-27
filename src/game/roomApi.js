@@ -11,6 +11,7 @@ import {
 import { db } from '../firebase'
 import { generateRoomCode } from './codes'
 import { AppError } from './errors'
+import { deleteRoomPhotos } from './photoApi'
 import {
   assignRounds,
   buildClueTurns,
@@ -109,6 +110,8 @@ export async function cleanupIfInactive(roomCode) {
     deleted = true
     return null
   })
+  // Les photos d'indice vivent hors du nœud de la salle : à supprimer à part.
+  if (deleted) await deleteRoomPhotos(roomCode).catch(() => {})
   return deleted
 }
 
@@ -122,15 +125,20 @@ export function subscribeRoom(roomCode, callback) {
 // partie on ne touche pas à la salle (le joueur peut revenir avec le code).
 export async function leaveRoom(roomCode, playerId) {
   const roomRef = ref(db, `rooms/${roomCode}`)
+  let emptied = false
   await runTransaction(roomRef, (room) => {
     if (!room || room.status !== 'lobby' || !room.players?.[playerId]) return room
     delete room.players[playerId]
     room.order = (room.order || []).filter((id) => id !== playerId)
-    if (room.order.length === 0) return null
+    if (room.order.length === 0) {
+      emptied = true
+      return null
+    }
     if (room.hostId === playerId) room.hostId = room.order[0]
     room.lastActivityAt = Date.now()
     return room
   })
+  if (emptied) await deleteRoomPhotos(roomCode).catch(() => {})
 }
 
 // Ajoute / retire un pack de la sélection de la partie. Plusieurs packs
@@ -160,6 +168,15 @@ export async function setGuessMode(roomCode, mode) {
   })
 }
 
+// Autorise (ou non) les indices photo pour toute la salle : chaque joueur peut
+// alors joindre une image à son indice, en plus ou à la place du texte.
+export async function setPhotoClues(roomCode, enabled) {
+  await update(ref(db, `rooms/${roomCode}`), {
+    photoClues: enabled,
+    lastActivityAt: Date.now(),
+  })
+}
+
 export async function startGame(roomCode, room) {
   const order = room.order
   const packs = Object.values(room.packs || {})
@@ -178,9 +195,12 @@ export async function startGame(roomCode, room) {
   })
 }
 
-export async function submitClue(roomCode, playerId, roundIndex, clue) {
+// `hasPhoto` signale qu'une image accompagne l'indice ; elle est stockée à part
+// (cf. photoApi) et chargée à la demande par ceux qui doivent la voir.
+export async function submitClue(roomCode, playerId, roundIndex, clue, hasPhoto = false) {
   await update(ref(db, `rooms/${roomCode}`), {
     [`rounds/${playerId}/${roundIndex}/clue`]: clue,
+    [`rounds/${playerId}/${roundIndex}/hasPhoto`]: hasPhoto,
     lastActivityAt: Date.now(),
   })
 }
@@ -372,8 +392,10 @@ export async function advanceTurn(roomCode, turnIndex) {
   })
 }
 
-// Relance une nouvelle partie dans la même salle (mêmes joueurs, score remis à zéro).
+// Relance une nouvelle partie dans la même salle (mêmes joueurs, score remis à
+// zéro). Les photos de la partie précédente ne servent plus : on les supprime.
 export async function playAgain(roomCode) {
+  await deleteRoomPhotos(roomCode).catch(() => {})
   await update(ref(db, `rooms/${roomCode}`), {
     status: 'lobby',
     rounds: null,

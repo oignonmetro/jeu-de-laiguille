@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Semicircle } from '../components/Semicircle'
 import { AppHeader } from '../components/SettingsMenu'
+import { CluePhoto } from '../components/CluePhoto'
 import { ScoreGauge } from '../components/ScoreGauge'
 import { getGaugeVerdict } from '../components/gaugeZones'
 import { Confetti } from '../components/Confetti'
@@ -135,7 +136,13 @@ function CooperativeResults({ roomCode, room, playerId }) {
           <p className="text-muted">
             {sourceName} ➜ {guesserName}
           </p>
-          <p className="clue-text">« {entry.clue} »</p>
+          <CluePhoto
+            roomCode={roomCode}
+            playerId={turn.sourceId}
+            roundIndex={turn.roundIndex}
+            hasPhoto={room.rounds?.[turn.sourceId]?.[turn.roundIndex]?.hasPhoto}
+          />
+          {entry.clue && <p className="clue-text">« {entry.clue} »</p>}
           <Semicircle
             spectrum={spectrum}
             mode="result"
@@ -192,7 +199,13 @@ function CooperativeResults({ roomCode, room, playerId }) {
               const spectrum = room.pack.spectra[entry.spectrumIndex]
               return (
                 <div className="result-round" key={i}>
-                  <p className="clue-text">« {entry.clue} »</p>
+                  <CluePhoto
+                    roomCode={roomCode}
+                    playerId={sourceId}
+                    roundIndex={i}
+                    hasPhoto={room.rounds?.[sourceId]?.[i]?.hasPhoto}
+                  />
+                  {entry.clue && <p className="clue-text">« {entry.clue} »</p>}
                   <Semicircle
                     spectrum={spectrum}
                     mode="result"
@@ -335,7 +348,13 @@ function IndividualResults({ roomCode, room, playerId }) {
                 }))
               return (
                 <div className="result-round" key={i}>
-                  <p className="clue-text">« {entry.clue} »</p>
+                  <CluePhoto
+                    roomCode={roomCode}
+                    playerId={authorId}
+                    roundIndex={i}
+                    hasPhoto={room.rounds?.[authorId]?.[i]?.hasPhoto}
+                  />
+                  {entry.clue && <p className="clue-text">« {entry.clue} »</p>}
                   <Semicircle
                     spectrum={spectrum}
                     mode="result"
