@@ -124,24 +124,22 @@ export function AppHeader({ children }) {
 
             <label className="settings-row">
               <span>
-                Petite fenêtre de chat / Grande fenêtre
+                Petite fenêtre de chat
                 <span className="settings-row__hint">
-                  Taille du panneau de chat à l&apos;ouverture (4/10 de l&apos;écran par défaut,
-                  7/10 si activé)
+                  Le panneau de chat s&apos;ouvre à 4/10 de l&apos;écran plutôt qu&apos;à 7/10
                 </span>
               </span>
               <span className="switch">
-                <input type="checkbox" checked={chatLarge} onChange={toggleChatSize} />
+                <input type="checkbox" checked={!chatLarge} onChange={toggleChatSize} />
                 <span className="switch__slider" aria-hidden="true" />
               </span>
             </label>
 
             <label className="settings-row">
               <span>
-                Afficher le récap / Résultat final direct
+                Passer automatiquement le récap
                 <span className="settings-row__hint">
-                  Anime chaque manche avant le score (par défaut), ou saute directement à
-                  l&apos;écran de résultat final, comme le bouton « Passer »
+                  Va directement à l&apos;écran de résultat final, comme le bouton « Passer »
                 </span>
               </span>
               <span className="switch">
