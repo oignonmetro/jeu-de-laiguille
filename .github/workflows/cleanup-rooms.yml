@@ -1,0 +1,47 @@
+name: Nettoyage des salles inactives
+
+# Filet de sécurité au nettoyage déjà fait côté client (App.jsx vérifie les
+# salles inactives depuis 30 min, mais seulement si un joueur a encore un
+# onglet ouvert dessus). Ce workflow tourne indépendamment de toute visite,
+# avec exactement le même seuil, pour que les salles (et leurs photos) ne
+# restent jamais indéfiniment si personne ne revient jamais dessus.
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Supprime les salles inactives depuis plus de 30 min (et leurs photos)
+        env:
+          DB_URL: ${{ secrets.VITE_FIREBASE_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${DB_URL:-}" ]; then
+            echo "VITE_FIREBASE_DATABASE_URL n'est pas configuré, rien à faire."
+            exit 0
+          fi
+
+          CUTOFF_MS=$(( $(date +%s%3N) - 30 * 60 * 1000 ))
+
+          ROOMS=$(curl -sf "${DB_URL}/rooms.json?shallow=false" || echo 'null')
+
+          CODES=$(echo "$ROOMS" | jq -r --argjson cutoff "$CUTOFF_MS" '
+            (. // {}) | to_entries[]
+            | select(((.value.lastActivityAt // .value.createdAt // 0) | floor) < $cutoff)
+            | .key
+          ')
+
+          if [ -z "$CODES" ]; then
+            echo "Aucune salle inactive à supprimer."
+            exit 0
+          fi
+
+          echo "$CODES" | while read -r CODE; do
+            echo "Suppression de la salle $CODE (et de ses photos)"
+            curl -sf -X DELETE "${DB_URL}/rooms/${CODE}.json" -o /dev/null
+            curl -sf -X DELETE "${DB_URL}/photos/${CODE}.json" -o /dev/null
+          done
