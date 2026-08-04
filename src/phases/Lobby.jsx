@@ -153,36 +153,21 @@ export function Lobby({ roomCode, room, playerId }) {
       <div className="card">
         <h2>Indices</h2>
         {isHost ? (
-          <ul className="pack-list pack-list--selectable">
-            <li>
-              <button
-                className={`pack-option ${!photoClues ? 'pack-option--selected' : ''}`}
-                onClick={() => handleSetPhotoClues(false)}
+          <label className="settings-row">
+            <span>Possibilité d&apos;ajouter des images</span>
+            <span className="switch">
+              <input
+                type="checkbox"
+                checked={photoClues}
+                onChange={(e) => handleSetPhotoClues(e.target.checked)}
                 disabled={busy}
-              >
-                Texte seul
-                <span className="text-muted"> · un indice écrit, comme d&apos;habitude</span>
-              </button>
-            </li>
-            <li>
-              <button
-                className={`pack-option ${photoClues ? 'pack-option--selected' : ''}`}
-                onClick={() => handleSetPhotoClues(true)}
-                disabled={busy}
-              >
-                📷 Texte et/ou photo
-                <span className="text-muted">
-                  {' '}
-                  · chacun peut joindre une photo de son téléphone
-                </span>
-              </button>
-            </li>
-          </ul>
+              />
+              <span className="switch__slider" aria-hidden="true" />
+            </span>
+          </label>
         ) : (
           <p className="text-muted">
-            {photoClues
-              ? 'Texte et/ou photo · chacun peut joindre une photo de son téléphone'
-              : "Texte seul · un indice écrit, comme d'habitude"}
+            Possibilité d&apos;ajouter des images : {photoClues ? 'activé' : 'désactivé'}
           </p>
         )}
       </div>
