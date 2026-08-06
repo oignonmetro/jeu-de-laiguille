@@ -5,9 +5,16 @@ name: Nettoyage des salles inactives
 # onglet ouvert dessus). Ce workflow tourne indépendamment de toute visite,
 # avec exactement le même seuil, pour que les salles (et leurs photos) ne
 # restent jamais indéfiniment si personne ne revient jamais dessus.
+#
+# Cron à l'heure pile plutôt que toutes les 30 min : GitHub retarde/regroupe
+# les schedules très fréquents en période de charge (observé en pratique :
+# 1h30-2h30 d'écart réel avec un */30), donc autant refléter honnêtement le
+# délai constaté plutôt qu'afficher une précision illusoire. Le délai de
+# suppression qui en résulte (1-2h) est largement acceptable pour des salles
+# abandonnées.
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
