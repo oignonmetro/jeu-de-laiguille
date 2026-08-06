@@ -259,7 +259,7 @@ export const DEFAULT_PACKS = [
       { left: 'Facile d\'accès', right: 'Isolé' },
       { left: 'Hémisphère Nord', right: 'Hémisphère Sud' },
       { left: 'Petit pays', right: 'Pays-continent' },
-      { left: 'Paris', right: 'Marseille' },
+      { left: 'Nantes', right: 'Paris' },
       { left: 'Métropole', right: 'Outre-mer' },
       { left: 'Destination de rêve', right: 'Destination qu\'on évite' },
       { left: 'Touristique', right: 'Pas touristique' },

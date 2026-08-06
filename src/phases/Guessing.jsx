@@ -328,10 +328,21 @@ function IndividualGuesser({
 }
 
 // Aiguille suivie en direct par les spectateurs : on lisse l'angle reçu du
-// réseau pour une rotation continue plutôt que des sauts saccadés.
-function LiveSemicircle({ spectrum, liveAngle }) {
+// réseau pour une rotation continue plutôt que des sauts saccadés. La palette
+// de score (targetAngle) reste affichée pendant que les autres décident,
+// comme en mode « Chacun pour soi » (cf. IndividualAuthorWaiting) — on force
+// l'aiguille via `needles` puisque Semicircle la masque par défaut dès qu'une
+// palette est affichée en mode "display".
+function LiveSemicircle({ spectrum, liveAngle, targetAngle }) {
   const smoothAngle = useSmoothAngle(liveAngle)
-  return <Semicircle spectrum={spectrum} mode="display" angle={smoothAngle} />
+  return (
+    <Semicircle
+      spectrum={spectrum}
+      mode="display"
+      targetAngle={targetAngle}
+      needles={[{ angle: smoothAngle }]}
+    />
+  )
 }
 
 // Mode "Consensus" : tous les joueurs sauf l'auteur de l'indice partagent la
@@ -441,7 +452,11 @@ function ConsensusGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
             hasPhoto={round.hasPhoto}
           />
           {round.clue && <p className="clue-text">{round.clue}</p>}
-          <LiveSemicircle spectrum={spectrum} liveAngle={room.liveAngle ?? 90} />
+          <LiveSemicircle
+            spectrum={spectrum}
+            liveAngle={room.liveAngle ?? 90}
+            targetAngle={round.needleAngle}
+          />
         </div>
 
         {/* À 2 joueurs (un seul devineur), le décompte d'accords est superflu. */}
