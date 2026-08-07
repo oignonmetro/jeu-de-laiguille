@@ -611,7 +611,9 @@ function ConsensusGuesser({
       )}
 
       <button className="btn" onClick={handleAgree} disabled={busy || iAgreed}>
-        {iAgreed ? 'En attente des autres...' : "Je suis d'accord"}
+        {/* À 2 joueurs, "les autres" c'est soi-même : valider sa réponse plutôt
+            que se mettre d'accord avec personne. */}
+        {iAgreed ? 'En attente des autres...' : others.length > 1 ? "Je suis d'accord" : 'Valider ma réponse'}
       </button>
     </div>
   )
