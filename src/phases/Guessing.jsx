@@ -4,6 +4,7 @@ import { AppHeader } from '../components/SettingsMenu'
 import { CluePhoto } from '../components/CluePhoto'
 import { useSmoothAngle } from '../hooks/useSmoothAngle'
 import { useSmoothAngles } from '../hooks/useSmoothAngles'
+import { useActionReady } from '../hooks/useActionReady'
 import { playerColor } from '../game/colors'
 import { effectiveGuessMode } from '../game/logic'
 import {
@@ -55,6 +56,9 @@ function IndividualGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
   const answered = guessers.filter((id) => guesses[id] != null).length
 
   const [busy, setBusy] = useState(false)
+  // Se réarme à chaque passage guessing -> reveal (pas au montage du
+  // composant, qui a déjà eu lieu en phase guessing) : cf. useActionReady.
+  const revealReady = useActionReady([isReveal])
 
   const handleNextTurn = async () => {
     setBusy(true)
@@ -114,7 +118,7 @@ function IndividualGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
           </ul>
         </div>
 
-        <button className="btn" onClick={handleNextTurn} disabled={busy}>
+        <button className="btn" onClick={handleNextTurn} disabled={busy || !revealReady}>
           {isLastTurn ? 'Voir le classement' : 'Tour suivant'}
         </button>
       </div>
@@ -245,6 +249,9 @@ function IndividualGuesser({
   const iAnswered = guesses[playerId] != null
   const [angle, setAngle] = useState(90)
   const [busy, setBusy] = useState(false)
+  // Composant remonté à chaque tour (key={turnIndex} sur Turn) : un seul
+  // armement au montage suffit, cf. useActionReady.
+  const submitReady = useActionReady([])
   const lastSentRef = useRef(0)
   const pendingRef = useRef(null)
   const latestAngleRef = useRef(90)
@@ -319,7 +326,7 @@ function IndividualGuesser({
           En attente des autres... ({answered}/{guessers.length})
         </p>
       ) : (
-        <button className="btn" onClick={handleSubmit} disabled={busy}>
+        <button className="btn" onClick={handleSubmit} disabled={busy || !submitReady}>
           Valider ma réponse
         </button>
       )}
@@ -361,6 +368,9 @@ function ConsensusGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
   const allAgreed = others.length > 0 && others.every((id) => agreements[id])
 
   const [busy, setBusy] = useState(false)
+  // Se réarme à chaque passage guessing -> reveal (pas au montage du
+  // composant, qui a déjà eu lieu en phase guessing) : cf. useActionReady.
+  const revealReady = useActionReady([isReveal])
 
   // Dès que tout le monde a donné son accord, n'importe quel client valide
   // le tour : le résultat est déterministe, donc des appels concurrents
@@ -426,7 +436,7 @@ function ConsensusGuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
           />
         </div>
 
-        <button className="btn" onClick={handleNextTurn} disabled={busy}>
+        <button className="btn" onClick={handleNextTurn} disabled={busy || !revealReady}>
           {isLastTurn ? 'Voir les résultats' : 'Tour suivant'}
         </button>
       </div>
@@ -514,6 +524,9 @@ function ConsensusGuesser({
   const [angle, setAngle] = useState(room.liveAngle ?? 90)
   const [dragging, setDragging] = useState(false)
   const [busy, setBusy] = useState(false)
+  // Composant remonté à chaque tour (key={turnIndex} sur Turn) : un seul
+  // armement au montage suffit, cf. useActionReady.
+  const submitReady = useActionReady([])
   const lastSentRef = useRef(0)
   const pendingRef = useRef(null)
   const latestAngleRef = useRef(angle)
@@ -610,7 +623,7 @@ function ConsensusGuesser({
         </div>
       )}
 
-      <button className="btn" onClick={handleAgree} disabled={busy || iAgreed}>
+      <button className="btn" onClick={handleAgree} disabled={busy || iAgreed || !submitReady}>
         {/* À 2 joueurs, "les autres" c'est soi-même : valider sa réponse plutôt
             que se mettre d'accord avec personne. */}
         {iAgreed ? 'En attente des autres...' : others.length > 1 ? "Je suis d'accord" : 'Valider ma réponse'}
